@@ -40,6 +40,17 @@
     }
     List<Map<String, Object>> monthlySalesList = (List<Map<String, Object>>) request.getAttribute("monthlySalesList");
     List<Map<String, Object>> bestSellersList = (List<Map<String, Object>>) request.getAttribute("bestSellersList");
+
+    // Retrieve and parse selected product ID null-safely at page scope
+    String prodIdParam = request.getParameter("id");
+    int prodId = 0;
+    if (prodIdParam != null && !prodIdParam.trim().isEmpty()) {
+        try {
+            prodId = Integer.parseInt(prodIdParam.trim());
+        } catch (NumberFormatException e) {
+            prodId = 0;
+        }
+    }
 %>
 <!DOCTYPE html>
 <html lang="en">
@@ -73,6 +84,14 @@
             border: 1px solid rgba(0,0,0,0.15);
             margin-right: 6px;
             vertical-align: middle;
+        }
+        @keyframes fadeInRight {
+            from { opacity: 0; transform: translateX(50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes fadeOutRight {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(50px); }
         }
     </style>
 </head>
@@ -331,11 +350,11 @@
 
                 <% } else if ("products".equalsIgnoreCase(activeTab)) { %>
                     <!-- ==========================================
-                         CATALOG MANAGER TAB
+                         CATALOG MANAGER TAB (REDESIGNED)
                          ========================================== -->
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px; text-align:left;">
                         <div>
-                            <h2 style="font-size:1.6rem; border-bottom:none; margin:0; padding-bottom:0;">Beauty Inventory</h2>
+                            <h2 style="font-size:1.6rem; border-bottom:none; margin:0; padding-bottom:0; font-family:'Playfair Display', serif; color:var(--burgundy);">Beauty Inventory</h2>
                             <p style="color:var(--text-muted); font-size:0.85rem; margin-top:5px;">Configure catalog entries, stocks, variants, and cosmetic imaging.</p>
                         </div>
                         <button class="btn-gold" style="border-radius:12px; padding:10px 24px;" onclick="openAddModal()">
@@ -343,14 +362,14 @@
                         </button>
                     </div>
 
-                    <!-- Advanced Filters Bar -->
-                    <div style="display:grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap:15px; margin-bottom:25px; align-items:center;">
+                    <!-- Advanced Filters & Sorting Bar -->
+                    <div style="display:grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr; gap:12px; margin-bottom:20px; align-items:center;">
                         <div class="search-input-wrapper" style="margin-bottom:0; text-align:left; width:100%;">
                             <i class="fas fa-search"></i>
                             <input type="text" id="catalogSearch" onkeyup="filterCatalog()" placeholder="Search by name, SKU, brand...">
                         </div>
                         <div>
-                            <select id="categoryFilter" onchange="filterCatalog()" style="padding:10px 15px; border-radius:12px; background:var(--bg-card); font-size:0.85rem; width:100%; border:1px solid var(--border-color); color:var(--text-primary);">
+                            <select id="categoryFilter" onchange="filterCatalog()" style="padding:10px 12px; border-radius:8px; background:var(--bg-card); font-size:0.85rem; width:100%; border:1px solid var(--border-color); color:var(--text-primary);">
                                 <option value="all">All Categories</option>
                                 <% for (String catName : categoriesList) { %>
                                     <option value="<%= catName %>"><%= catName %></option>
@@ -358,190 +377,188 @@
                             </select>
                         </div>
                         <div>
-                            <select id="statusFilter" onchange="filterCatalog()" style="padding:10px 15px; border-radius:12px; background:var(--bg-card); font-size:0.85rem; width:100%; border:1px solid var(--border-color); color:var(--text-primary);">
+                            <select id="statusFilter" onchange="filterCatalog()" style="padding:10px 12px; border-radius:8px; background:var(--bg-card); font-size:0.85rem; width:100%; border:1px solid var(--border-color); color:var(--text-primary);">
                                 <option value="ALL">All Statuses</option>
                                 <option value="ACTIVE">Active</option>
                                 <option value="DRAFT">Draft</option>
                             </select>
                         </div>
                         <div>
-                            <select id="stockFilter" onchange="filterCatalog()" style="padding:10px 15px; border-radius:12px; background:var(--bg-card); font-size:0.85rem; width:100%; border:1px solid var(--border-color); color:var(--text-primary);">
+                            <select id="stockFilter" onchange="filterCatalog()" style="padding:10px 12px; border-radius:8px; background:var(--bg-card); font-size:0.85rem; width:100%; border:1px solid var(--border-color); color:var(--text-primary);">
                                 <option value="ALL">All Stock Levels</option>
                                 <option value="LOW">Low Stock (&lt; 10)</option>
                                 <option value="OUT">Out of Stock</option>
                             </select>
                         </div>
                         <div>
-                            <select id="onSaleFilter" onchange="filterCatalog()" style="padding:10px 15px; border-radius:12px; background:var(--bg-card); font-size:0.85rem; width:100%; border:1px solid var(--border-color); color:var(--text-primary);">
+                            <select id="onSaleFilter" onchange="filterCatalog()" style="padding:10px 12px; border-radius:8px; background:var(--bg-card); font-size:0.85rem; width:100%; border:1px solid var(--border-color); color:var(--text-primary);">
                                 <option value="ALL">All Prices</option>
                                 <option value="SALE">On Sale</option>
                                 <option value="NORMAL">Normal Price</option>
                             </select>
                         </div>
+                        <div>
+                            <select id="sortSelector" onchange="filterCatalog()" style="padding:10px 12px; border-radius:8px; background:var(--bg-card); font-size:0.85rem; width:100%; border:1px solid var(--border-color); color:var(--text-primary);">
+                                <option value="id_desc">Sort: Newest</option>
+                                <option value="name_asc">Sort: Name A-Z</option>
+                                <option value="name_desc">Sort: Name Z-A</option>
+                                <option value="price_asc">Sort: Price Low-High</option>
+                                <option value="price_desc">Sort: Price High-Low</option>
+                                <option value="stock_asc">Sort: Stock Low-High</option>
+                                <option value="stock_desc">Sort: Stock High-Low</option>
+                                <option value="rating_desc">Sort: Rating High-Low</option>
+                            </select>
+                        </div>
                     </div>
 
-                    <table class="admin-table" id="catalogTable">
-                        <thead>
-                            <tr>
-                                <th>Thumbnail</th>
-                                <th>Name</th>
-                                <th>Category</th>
-                                <th>Price</th>
-                                <th>Stock Qty (Main)</th>
-                                <th>Quick Stock Update</th>
-                                <th style="text-align:right;">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <%
-                                try {
-                                    Connection con = DBConnection.getConnection();
-                                    Statement st = con.createStatement();
-                                    ResultSet rs = st.executeQuery("SELECT id, name, description, price, category, image_url, stock, rating, brand, sku, status FROM products ORDER BY id DESC");
-                                    while (rs.next()) {
-                                        int id = rs.getInt("id");
-                                        String name = rs.getString("name");
-                                        String desc = rs.getString("description").replace("'", "\\'").replace("\n", " ").replace("\r", " ");
-                                        double price = rs.getDouble("price");
-                                        String cat = rs.getString("category");
-                                        String img = rs.getString("image_url");
-                                        int stock = rs.getInt("stock");
-                                        int rating = rs.getInt("rating");
-                                        String brand = rs.getString("brand");
-                                        String sku = rs.getString("sku");
-                                        String status = rs.getString("status");
-                                        boolean onSale = com.mycompany.mavenproject2.PromotionHelper.hasPromotion(id, cat, brand);
-                            %>
-                            <tr class="product-row" style="border-bottom:none;"
-                                data-name="<%= name.toLowerCase().replace("\"", "&quot;") %>"
-                                data-sku="<%= (sku != null ? sku.toLowerCase().replace("\"", "&quot;") : "") %>"
-                                data-brand="<%= (brand != null ? brand.toLowerCase().replace("\"", "&quot;") : "") %>"
-                                data-category="<%= cat.toLowerCase().replace("\"", "&quot;") %>"
-                                data-status="<%= (status != null ? status.toUpperCase() : "ACTIVE") %>"
-                                data-stock="<%= stock %>"
-                                data-onsale="<%= onSale ? "true" : "false" %>">
-                                <td><a href="admin?tab=product-details&id=<%= id %>"><img src="<%= img %>" alt="" style="width:50px; height:50px; border-radius:8px; object-fit:cover; border:1px solid var(--border-light);"></a></td>
-                                <td style="font-weight:600; color:var(--text-primary);" class="prod-name"><a href="admin?tab=product-details&id=<%= id %>" style="color:inherit; text-decoration:none;"><%= name %></a></td>
-                                <td style="text-transform:uppercase; font-size:0.75rem; color:var(--gold); font-weight:600;" class="prod-cat"><%= cat %></td>
-                                <td>₹<%= String.format("%.2f", price) %></td>
-                                <td style="font-weight:600; color: <%= (stock < 10) ? "var(--danger)" : "var(--text-secondary)" %>"><%= stock %></td>
-                                <td>
-                                    <!-- Quick Stock Update Form -->
-                                    <form action="AdminServlet" method="POST" style="display:inline-flex; align-items:center; gap:8px;">
-                                        <input type="hidden" name="action" value="updateStock">
-                                        <input type="hidden" name="id" value="<%= id %>">
-                                        <input type="number" name="stock" value="<%= stock %>" required min="0" style="width:70px; padding:6px 10px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-dark); color:var(--text-primary); text-align:center; font-size:0.8rem;">
-                                        <button type="submit" class="btn-gold" style="border-radius:8px; padding:6px 10px; font-size:0.75rem;">
-                                            <i class="fas fa-check"></i>
-                                        </button>
-                                    </form>
-                                </td>
-                                <td style="text-align:right;">
-                                    <a class="btn-outline" style="border-radius:6px; padding:6px 12px; font-size:0.75rem; margin-right:5px; text-decoration:none; display:inline-block;"
-                                            href="admin?tab=product-details&id=<%= id %>">
-                                        Edit Product
-                                    </a>
-                                    <form action="AdminServlet" method="POST" style="display:inline-block;" onsubmit="return confirm('Delete product <%= name %>?');">
-                                        <input type="hidden" name="action" value="delete">
-                                        <input type="hidden" name="id" value="<%= id %>">
-                                        <button type="submit" class="btn-outline" style="border-radius:6px; padding:6px 12px; font-size:0.75rem; color:var(--danger); border-color:var(--danger); background:transparent; text-transform:none;">
-                                            Delete
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                            <!-- Nested Variants Table Row -->
-                            <tr style="background: rgba(197, 171, 87, 0.015);" class="variants-row">
-                                <td colspan="7" style="padding: 12px 30px; border-top:none; border-bottom: 2px solid var(--border-light);">
-                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                                        <span style="font-size:0.8rem; font-weight:700; color:var(--gold);"><i class="fas fa-tags" style="margin-right:5px;"></i> Variants of <%= name %></span>
-                                        <div style="display:flex; gap:8px;">
-                                            <button class="btn-gold" style="padding:5px 12px; font-size:0.7rem; border-radius:6px; text-transform:none;" onclick="openAddVariantModal(<%= id %>, '<%= name.replace("'", "\\'") %>')">
-                                                <i class="fas fa-plus-circle"></i> Add Shade / Size
-                                            </button>
-                                            <button class="btn-outline" style="padding:5px 12px; font-size:0.7rem; border-radius:6px; text-transform:none; font-weight:600;" onclick="openManageGalleryModal(<%= id %>, '<%= name.replace("'", "\\'") %>')">
-                                                <i class="fas fa-images"></i> Manage Gallery
+                    <!-- Bulk Actions Toolbar -->
+                    <div id="bulkActionsToolbar" style="display:none; background:var(--bg-surface); border:1px solid var(--gold); padding:12px 20px; border-radius:12px; margin-bottom:20px; text-align:left; align-items:center; justify-content:space-between; gap:15px; box-shadow:var(--shadow-lux);">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <span id="selectedCountLabel" style="font-weight:600; color:var(--gold); font-size:0.9rem;">0 items selected</span>
+                        </div>
+                        <div style="display:flex; gap:10px;">
+                            <button type="button" class="btn-outline" onclick="performBulkAction('activate')" style="border-radius:6px; padding:6px 12px; font-size:0.75rem; text-transform:none;">
+                                <i class="fas fa-check" style="margin-right:4px; color:var(--success);"></i> Make Active
+                            </button>
+                            <button type="button" class="btn-outline" onclick="performBulkAction('draft')" style="border-radius:6px; padding:6px 12px; font-size:0.75rem; text-transform:none;">
+                                <i class="fas fa-eye-slash" style="margin-right:4px; color:var(--text-muted);"></i> Make Draft
+                            </button>
+                            <button type="button" class="btn-outline" onclick="performBulkAction('delete')" style="border-radius:6px; padding:6px 12px; font-size:0.75rem; color:var(--danger); border-color:var(--danger); background:transparent; text-transform:none;">
+                                <i class="fas fa-trash" style="margin-right:4px;"></i> Delete Selected
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Catalogue Table Layout -->
+                    <div style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:18px; padding:15px; box-shadow:var(--shadow-lux); overflow-x:auto;">
+                        <table class="admin-table" style="width:100%; margin-top:0; border-collapse:collapse;" id="catalogTable">
+                            <thead>
+                                <tr>
+                                    <th style="width:40px; text-align:center; padding:12px 8px;">
+                                        <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this)" style="cursor:pointer; width:16px; height:16px;">
+                                    </th>
+                                    <th style="width:80px;">ID & Image</th>
+                                    <th>Product Details</th>
+                                    <th style="width:100px;">Base Price</th>
+                                    <th style="width:160px;">Inventory (Main)</th>
+                                    <th style="width:90px; text-align:center;">Rating</th>
+                                    <th style="width:100px; text-align:center;">Status</th>
+                                    <th style="width:120px; text-align:right; padding-right:15px;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="catalogTableBody">
+                                <%
+                                    try {
+                                        Connection con = DBConnection.getConnection();
+                                        Statement st = con.createStatement();
+                                        ResultSet rs = st.executeQuery("SELECT id, name, description, price, category, image_url, stock, rating, brand, sku, status FROM products ORDER BY id DESC");
+                                        while (rs.next()) {
+                                            int id = rs.getInt("id");
+                                            String name = rs.getString("name");
+                                            String desc = rs.getString("description").replace("'", "\\'").replace("\n", " ").replace("\r", " ");
+                                            double price = rs.getDouble("price");
+                                            String cat = rs.getString("category");
+                                            String img = rs.getString("image_url");
+                                            int stock = rs.getInt("stock");
+                                            int rating = rs.getInt("rating");
+                                            String brand = rs.getString("brand");
+                                            String sku = rs.getString("sku");
+                                            String status = rs.getString("status");
+                                            boolean onSale = com.mycompany.mavenproject2.PromotionHelper.hasPromotion(id, cat, brand);
+                                %>
+                                <tr class="product-row" 
+                                    data-id="<%= id %>"
+                                    data-name="<%= name.toLowerCase().replace("\"", "&quot;") %>"
+                                    data-sku="<%= (sku != null ? sku.toLowerCase().replace("\"", "&quot;") : "") %>"
+                                    data-brand="<%= (brand != null ? brand.toLowerCase().replace("\"", "&quot;") : "") %>"
+                                    data-category="<%= cat.toLowerCase().replace("\"", "&quot;") %>"
+                                    data-status="<%= (status != null ? status.toUpperCase() : "ACTIVE") %>"
+                                    data-stock="<%= stock %>"
+                                    data-price="<%= price %>"
+                                    data-rating="<%= rating %>"
+                                    data-onsale="<%= onSale ? "true" : "false" %>"
+                                    style="border-bottom:1px solid var(--border-light); vertical-align:middle; transition: background 0.2s ease;">
+                                    
+                                    <td style="text-align:center; padding:12px 8px; vertical-align:middle;">
+                                        <input type="checkbox" class="product-select-checkbox" data-id="<%= id %>" onchange="updateSelectionState()" style="cursor:pointer; width:16px; height:16px;">
+                                    </td>
+                                    
+                                    <td style="vertical-align:middle;">
+                                        <div style="position:relative; width:50px; height:50px; border-radius:8px; overflow:hidden; border:1px solid var(--border-color); background:var(--bg-dark);">
+                                            <img src="<%= img %>" alt="<%= name %>" style="width:100%; height:100%; object-fit:cover;">
+                                        </div>
+                                        <div style="font-size:0.65rem; color:var(--text-muted); font-weight:700; margin-top:4px; text-align:center;">#<%= id %></div>
+                                    </td>
+                                    
+                                    <td style="text-align:left; vertical-align:middle;">
+                                        <div style="font-size:0.7rem; font-weight:700; color:var(--gold); letter-spacing:1px; text-transform:uppercase;"><%= cat %></div>
+                                        <div style="font-weight:600; font-size:0.95rem; color:var(--burgundy); font-family:'Playfair Display', serif;"><%= name %></div>
+                                        <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">
+                                            <span>SKU: <%= sku != null ? sku : "N/A" %></span>
+                                            <% if (brand != null && !brand.trim().isEmpty()) { %>
+                                                <span style="margin-left:8px; border-left:1px solid var(--border-light); padding-left:8px;">Brand: <%= brand %></span>
+                                            <% } %>
+                                        </div>
+                                    </td>
+                                    
+                                    <td style="vertical-align:middle; font-weight:700; font-size:0.95rem; color:var(--text-primary); text-align:left;">
+                                        ₹<%= String.format("%.2f", price) %>
+                                        <% if (onSale) { %>
+                                            <div style="font-size:0.65rem; color:var(--gold); font-weight:700; margin-top:2px;"><i class="fas fa-tags"></i> Promo Active</div>
+                                        <% } %>
+                                    </td>
+                                    
+                                    <td style="vertical-align:middle;">
+                                        <div style="display:flex; align-items:center; gap:6px;">
+                                            <input type="number" id="inline-stock-<%= id %>" value="<%= stock %>" min="0" 
+                                                   style="width: 55px; padding: 6px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: var(--text-primary); text-align: center; font-size: 0.8rem; outline: none;">
+                                            <button type="button" class="btn-gold" onclick="updateStockAsync(<%= id %>)" style="border-radius:8px; padding:6px 10px; font-size:0.7rem; margin:0; line-height:1; letter-spacing:0; text-transform:none;">
+                                                Save
                                             </button>
                                         </div>
-                                    </div>
+                                        <div style="font-size:0.7rem; margin-top:4px; font-weight:600; text-align:left; color: <%= (stock == 0) ? "var(--danger)" : ((stock < 10) ? "var(--gold)" : "var(--success)") %>">
+                                            <i class="fas <%= (stock == 0) ? "fa-times-circle" : ((stock < 10) ? "fa-exclamation-triangle" : "fa-check-circle") %>" style="margin-right:2px;"></i>
+                                            <%= stock == 0 ? "Out of Stock" : (stock < 10 ? "Low Stock: " + stock : "In Stock") %>
+                                        </div>
+                                    </td>
                                     
-                                    <table class="variants-sub-table" style="width:100%; border-collapse:collapse; background:var(--bg-card); border-radius:10px; overflow:hidden; border:1px solid var(--border-light); margin-bottom:5px;">
-                                        <thead>
-                                            <tr>
-                                                <th>Shade / Variant Name</th>
-                                                <th>Color Code / Label</th>
-                                                <th>Stock Quantity</th>
-                                                <th>Price Override</th>
-                                                <th style="text-align:right;">Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <%
-                                                try (PreparedStatement psVars = con.prepareStatement(
-                                                        "SELECT id, variant_name, color_code, stock, price FROM product_variants WHERE product_id = ? ORDER BY id ASC")) {
-                                                    psVars.setInt(1, id);
-                                                    try (ResultSet rsVars = psVars.executeQuery()) {
-                                                        boolean hasVars = false;
-                                                        while (rsVars.next()) {
-                                                            hasVars = true;
-                                                            int vId = rsVars.getInt("id");
-                                                            String vName = rsVars.getString("variant_name");
-                                                            String vColor = rsVars.getString("color_code");
-                                                            int vStock = rsVars.getInt("stock");
-                                                            double vPrice = rsVars.getDouble("price");
-                                                            boolean hasOverride = !rsVars.wasNull();
-                                            %>
-                                            <tr style="border-bottom:1px solid rgba(0,0,0,0.03);">
-                                                <td style="font-weight:600; color:var(--text-primary);"><%= vName %></td>
-                                                <td>
-                                                    <% if (vColor.startsWith("#")) { %>
-                                                        <span class="variant-color-indicator" style="background-color:<%= vColor %>;"></span>
-                                                    <% } %>
-                                                    <code><%= vColor %></code>
-                                                </td>
-                                                <td style="font-weight:600; color:<%= vStock < 5 ? "var(--danger)" : "var(--text-secondary)" %>"><%= vStock %> units</td>
-                                                <td><%= hasOverride ? "₹" + String.format("%.2f", vPrice) : "<span style='color:var(--text-muted); font-size:0.75rem;'>(Inherit Parent Price)</span>" %></td>
-                                                <td style="text-align:right;">
-                                                    <button class="btn-outline" style="padding:4px 8px; font-size:0.65rem; border-radius:4px; text-transform:none; margin-right:4px;" 
-                                                            onclick="openEditVariantModal(<%= vId %>, <%= id %>, '<%= vName.replace("'", "\\'") %>', '<%= vColor.replace("'", "\\'") %>', <%= vStock %>, '<%= hasOverride ? vPrice : "" %>')">
-                                                        Edit
-                                                    </button>
-                                                    <form action="AdminServlet" method="POST" style="display:inline-block;" onsubmit="return confirm('Delete variant <%= vName %>?');">
-                                                        <input type="hidden" name="action" value="deleteVariant">
-                                                        <input type="hidden" name="variantId" value="<%= vId %>">
-                                                        <button type="submit" class="btn-outline" style="padding:4px 8px; font-size:0.65rem; border-radius:4px; color:var(--danger); border-color:var(--danger); background:transparent; text-transform:none;">
-                                                            Delete
-                                                        </button>
-                                                    </form>
-                                                </td>
-                                            </tr>
-                                            <%
-                                                        }
-                                                        if (!hasVars) {
-                                            %>
-                                            <tr>
-                                                <td colspan="5" style="text-align:center; padding:12px; color:var(--text-muted); font-size:0.75rem;">No variants configured. (Uses main product stock/price by default)</td>
-                                            </tr>
-                                            <%
-                                                        }
-                                                    }
-                                                }
-                                            %>
-                                        </tbody>
-                                    </table>
-                                </td>
-                            </tr>
-                            <%
+                                    <td style="vertical-align:middle; text-align:center; font-size:0.8rem; color:var(--gold); white-space:nowrap;">
+                                        <% for (int i = 0; i < rating; i++) { %><i class="fas fa-star" style="font-size:0.7rem;"></i><% } %>
+                                        <div style="font-size:0.65rem; color:var(--text-muted); margin-top:2px;"><%= rating %>/5</div>
+                                    </td>
+                                    
+                                    <td style="vertical-align:middle; text-align:center;">
+                                        <button type="button" onclick="toggleStatusAsync(<%= id %>)" style="background:none; border:none; cursor:pointer; padding:0;">
+                                            <span id="status-badge-<%= id %>" class="status-badge <%= "ACTIVE".equalsIgnoreCase(status) ? "status-completed" : "status-cancelled" %>" style="font-size:0.7rem; padding: 4px 10px; border-radius: 20px; display: inline-block;">
+                                                <%= "ACTIVE".equalsIgnoreCase(status) ? "Active" : "Draft" %>
+                                            </span>
+                                        </button>
+                                    </td>
+                                    
+                                    <td style="vertical-align:middle; text-align:right; padding-right:15px;">
+                                        <div style="display:flex; justify-content:flex-end; gap:6px; align-items:center;">
+                                            <a href="admin?tab=product-details&id=<%= id %>" class="btn-outline" style="border-radius:6px; padding:6px 10px; font-size:0.75rem; text-transform:none; display:inline-flex; align-items:center; gap:4px;">
+                                                <i class="fas fa-edit"></i> Edit
+                                            </a>
+                                            <button type="button" onclick="deleteProductAsync(<%= id %>, '<%= name.replace("'", "\\'") %>')" style="background:transparent; border:none; color:var(--danger); cursor:pointer; font-size:1rem; padding:6px; display:inline-flex; align-items:center;">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                    
+                                </tr>
+                                <%
+                                        }
+                                        rs.close();
+                                        st.close();
+                                        con.close();
+                                    } catch (Exception e) {
+                                        out.println("<tr><td colspan='8' style='color:var(--danger); padding:20px;'>Error: " + e.getMessage() + "</td></tr>");
                                     }
-                                    rs.close();
-                                    st.close();
-                                    con.close();
-                                } catch (Exception e) {
-                                    out.println("<tr><td colspan='7' style='color:var(--danger);'>Error: " + e.getMessage() + "</td></tr>");
-                                }
-                            %>
-                        </tbody>
-                    </table>
+                                %>
+                            </tbody>
+                        </table>
+                    </div>
 
                     <!-- Categories Section inside Products tab -->
                     <div style="margin-top:50px; background:var(--bg-card); border:1px solid var(--border-color); border-radius:24px; padding:35px; box-shadow:var(--shadow-lux); text-align:left;">
@@ -1089,16 +1106,13 @@
                     </div>
                 <% } else if ("product-details".equalsIgnoreCase(activeTab)) { %>
                     <!-- ==========================================
-                         PRODUCT DETAILS WORKSPACE TAB
+                         PRODUCT DETAILS WORKSPACE TAB (REDESIGNED)
                          ========================================== -->
                     <%
-                        String prodIdParam = request.getParameter("id");
-                        int prodId = 0;
                         String pName = "", pDesc = "", pCat = "", pImg = "", pBrand = "", pSku = "", pStatus = "", pMetaTitle = "", pMetaDesc = "", pMetaKeywords = "";
                         double pPrice = 0.0;
                         int pStock = 0, pRating = 5;
-                        if (prodIdParam != null) {
-                            prodId = Integer.parseInt(prodIdParam.trim());
+                        if (prodId > 0) {
                             try (Connection con = DBConnection.getConnection();
                                  PreparedStatement ps = con.prepareStatement("SELECT * FROM products WHERE id = ?")) {
                                 ps.setInt(1, prodId);
@@ -1129,17 +1143,18 @@
                             <i class="fas fa-arrow-left" style="margin-right:8px;"></i> Back to Catalog
                         </a>
                         <h2 style="font-size:1.8rem; border-bottom:none; margin:15px 0 0 0; padding-bottom:0; font-family:'Playfair Display', serif;">
-                            Manage Product: <span style="color:var(--gold);"><%= pName %></span>
+                            Manage Product: <span style="color:var(--gold);" id="detailsProductNameHeader"><%= pName %></span>
                         </h2>
                     </div>
 
                     <div style="display:grid; grid-template-columns: 1.2fr 1fr; gap:30px; text-align:left; margin-top:20px;">
                         <!-- Left Column: Master Form (Specifications & SEO) -->
                         <div style="display:flex; flex-direction:column; gap:25px;">
+                            <!-- Card 1: Specifications & SEO -->
                             <div style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:24px; padding:30px; box-shadow:var(--shadow-lux);">
-                                <h3 style="font-size:1.2rem; border:none; margin-top:0; margin-bottom:20px; color:var(--burgundy); font-family:'Playfair Display', serif;">Product Specifications</h3>
+                                <h3 style="font-size:1.2rem; border:none; margin-top:0; margin-bottom:20px; color:var(--burgundy); font-family:'Playfair Display', serif;">Product Specifications & SEO</h3>
                                 
-                                <form action="AdminServlet" method="POST" enctype="multipart/form-data">
+                                <form onsubmit="saveSpecifications(event)" enctype="multipart/form-data">
                                     <input type="hidden" name="action" value="edit">
                                     <input type="hidden" name="id" value="<%= prodId %>">
                                     <input type="hidden" name="redirectTab" value="product-details">
@@ -1238,12 +1253,26 @@
                         <!-- Right Column: Gallery, Variants, Promotions, Reviews -->
                         <div style="display:flex; flex-direction:column; gap:25px;">
                             
-                            <!-- Gallery Management Card -->
+                            <!-- Card 2: Variants Configuration & Variant Image Editor -->
+                            <div style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:24px; padding:30px; box-shadow:var(--shadow-lux);">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                                    <h3 style="font-size:1.2rem; border:none; margin:0; color:var(--burgundy); font-family:'Playfair Display', serif;">Product Variants</h3>
+                                    <button class="btn-gold" style="padding:6px 12px; font-size:0.75rem; border-radius:6px; text-transform:none;" onclick="openAddVariantModal(<%= prodId %>, '<%= pName.replace("'", "\\'") %>')">
+                                        <i class="fas fa-plus-circle"></i> Add Shade / Size
+                                    </button>
+                                </div>
+
+                                <div id="variantsContainer">
+                                    <!-- Loaded dynamically via fetchVariantsList -->
+                                </div>
+                            </div>
+
+                            <!-- Card 4: Gallery Management Card -->
                             <div style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:24px; padding:30px; box-shadow:var(--shadow-lux);">
                                 <h3 style="font-size:1.2rem; border:none; margin-top:0; margin-bottom:10px; color:var(--burgundy); font-family:'Playfair Display', serif;">Cosmetic Gallery Assets</h3>
                                 <p style="color:var(--text-muted); font-size:0.75rem; margin-bottom:15px;">Drag & drop to sort. Use "Set Main" to choose the default thumbnail.</p>
                                 
-                                <form action="AdminServlet" method="POST" enctype="multipart/form-data" style="background:rgba(0,0,0,0.01); border:1px solid var(--border-light); padding:15px; border-radius:12px; margin-bottom:20px;">
+                                <form onsubmit="uploadGeneralImages(event)" enctype="multipart/form-data" style="background:rgba(0,0,0,0.01); border:1px solid var(--border-light); padding:15px; border-radius:12px; margin-bottom:20px;">
                                     <input type="hidden" name="action" value="uploadProductImages">
                                     <input type="hidden" name="productId" value="<%= prodId %>">
                                     <input type="hidden" name="redirectTab" value="product-details">
@@ -1263,86 +1292,7 @@
                                 </div>
                             </div>
 
-                            <!-- Variants Configuration Card -->
-                            <div style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:24px; padding:30px; box-shadow:var(--shadow-lux);">
-                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                                    <h3 style="font-size:1.2rem; border:none; margin:0; color:var(--burgundy); font-family:'Playfair Display', serif;">Product Variants</h3>
-                                    <button class="btn-gold" style="padding:6px 12px; font-size:0.75rem; border-radius:6px; text-transform:none;" onclick="openAddVariantModal(<%= prodId %>, '<%= pName.replace("'", "\\'") %>')">
-                                        <i class="fas fa-plus-circle"></i> Add Shade / Size
-                                    </button>
-                                </div>
-
-                                <table class="variants-sub-table" style="width:100%; border-collapse:collapse; background:var(--bg-card); border-radius:10px; overflow:hidden; border:1px solid var(--border-light);">
-                                    <thead>
-                                        <tr>
-                                            <th>Shade/Name</th>
-                                            <th>Color/Code</th>
-                                            <th>Stock</th>
-                                            <th>Price Override</th>
-                                            <th style="text-align:right;">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <%
-                                            try (Connection con = DBConnection.getConnection();
-                                                 PreparedStatement psVars = con.prepareStatement(
-                                                     "SELECT id, variant_name, color_code, stock, price FROM product_variants WHERE product_id = ? ORDER BY id ASC")) {
-                                                psVars.setInt(1, prodId);
-                                                try (ResultSet rsVars = psVars.executeQuery()) {
-                                                    boolean hasVars = false;
-                                                    while (rsVars.next()) {
-                                                        hasVars = true;
-                                                        int vId = rsVars.getInt("id");
-                                                        String vName = rsVars.getString("variant_name");
-                                                        String vColor = rsVars.getString("color_code");
-                                                        int vStock = rsVars.getInt("stock");
-                                                        double vPrice = rsVars.getDouble("price");
-                                                        boolean hasOverride = !rsVars.wasNull();
-                                        %>
-                                        <tr style="border-bottom:1px solid rgba(0,0,0,0.03);">
-                                            <td style="font-weight:600; color:var(--text-primary);"><%= vName %></td>
-                                            <td>
-                                                <% if (vColor.startsWith("#")) { %>
-                                                    <span class="variant-color-indicator" style="background-color:<%= vColor %>;"></span>
-                                                <% } %>
-                                                <code><%= vColor %></code>
-                                            </td>
-                                            <td style="font-weight:600; color:<%= vStock < 5 ? "var(--danger)" : "var(--text-secondary)" %>"><%= vStock %> units</td>
-                                            <td><%= hasOverride ? "₹" + String.format("%.2f", vPrice) : "<span style='color:var(--text-muted); font-size:0.7rem;'>Inherit</span>" %></td>
-                                            <td style="text-align:right;">
-                                                <button class="btn-outline" style="padding:4px 8px; font-size:0.65rem; border-radius:4px; text-transform:none; margin-right:4px;" 
-                                                        onclick="openEditVariantModal(<%= vId %>, <%= prodId %>, '<%= vName.replace("'", "\\'") %>', '<%= vColor.replace("'", "\\'") %>', <%= vStock %>, '<%= hasOverride ? vPrice : "" %>')">
-                                                    Edit
-                                                </button>
-                                                <form action="AdminServlet" method="POST" style="display:inline-block;" onsubmit="return confirm('Delete variant <%= vName %>?');">
-                                                    <input type="hidden" name="action" value="deleteVariant">
-                                                    <input type="hidden" name="variantId" value="<%= vId %>">
-                                                    <input type="hidden" name="redirectTab" value="product-details">
-                                                    <button type="submit" class="btn-outline" style="padding:4px 8px; font-size:0.65rem; border-radius:4px; color:var(--danger); border-color:var(--danger); background:transparent; text-transform:none;">
-                                                        Delete
-                                                    </button>
-                                                </form>
-                                            </td>
-                                        </tr>
-                                        <%
-                                                    }
-                                                    if (!hasVars) {
-                                        %>
-                                        <tr>
-                                            <td colspan="5" style="text-align:center; padding:12px; color:var(--text-muted); font-size:0.75rem;">No variants configured.</td>
-                                        </tr>
-                                        <%
-                                                    }
-                                                }
-                                            } catch (Exception ex) {
-                                                out.println("<tr><td colspan='5'>Error: " + ex.getMessage() + "</td></tr>");
-                                            }
-                                        %>
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <!-- Product Promotions Card -->
+                            <!-- Associated Discounts Card -->
                             <div style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:24px; padding:30px; box-shadow:var(--shadow-lux);">
                                 <h3 style="font-size:1.2rem; border:none; margin-top:0; margin-bottom:15px; color:var(--burgundy); font-family:'Playfair Display', serif;">Associated Discounts</h3>
                                 <div style="display:flex; flex-direction:column; gap:10px;">
@@ -1400,8 +1350,8 @@
                                     <%
                                         try (Connection con = DBConnection.getConnection();
                                              PreparedStatement psRev = con.prepareStatement(
-                                                 "SELECT r.id, r.fullname, r.rating, r.comment, r.created_at, r.is_hidden " +
-                                                 "FROM reviews r WHERE r.product_id = ? ORDER BY r.created_at DESC")) {
+                                                 "SELECT r.id, u.fullname, r.rating, r.review_text AS comment, r.created_at, r.is_hidden " +
+                                                 "FROM reviews r JOIN users u ON r.user_id = u.id WHERE r.product_id = ? ORDER BY r.created_at DESC")) {
                                             psRev.setInt(1, prodId);
                                             try (ResultSet rsRev = psRev.executeQuery()) {
                                                 boolean hasReviews = false;
@@ -1696,8 +1646,8 @@
                                     Connection con = DBConnection.getConnection();
                                     Statement st = con.createStatement();
                                     ResultSet rs = st.executeQuery(
-                                        "SELECT r.id, r.product_id, r.fullname, r.rating, r.comment, r.created_at, r.is_hidden, p.name AS product_name " +
-                                        "FROM reviews r JOIN products p ON r.product_id = p.id ORDER BY r.created_at DESC"
+                                        "SELECT r.id, r.product_id, u.fullname, r.rating, r.review_text AS comment, r.created_at, r.is_hidden, p.name AS product_name " +
+                                        "FROM reviews r JOIN products p ON r.product_id = p.id JOIN users u ON r.user_id = u.id ORDER BY r.created_at DESC"
                                     );
                                     boolean hasReviews = false;
                                     while (rs.next()) {
@@ -1767,6 +1717,7 @@
 
             </main>
         </div>
+    </div>
 
 
     <!-- ==========================================
@@ -1934,6 +1885,7 @@
             <form action="AdminServlet" method="POST" enctype="multipart/form-data">
                 <input type="hidden" name="action" value="addVariant">
                 <input type="hidden" name="productId" id="addVarProductId">
+                <input type="hidden" name="redirectTab" id="addVarRedirectTab">
                 
                 <div class="form-group">
                     <label>Variant / Shade Name</label>
@@ -1983,6 +1935,7 @@
                 <input type="hidden" name="action" value="editVariant">
                 <input type="hidden" name="variantId" id="editVarVariantId">
                 <input type="hidden" name="productId" id="editVarProductId">
+                <input type="hidden" name="redirectTab" id="editVarRedirectTab">
                 
                 <div class="form-group">
                     <label>Variant / Shade Name</label>
@@ -2240,6 +2193,12 @@
         // --- NEW MODAL CONTROLLERS ---
         function openAddVariantModal(productId, productName) {
             document.getElementById('addVarProductId').value = productId;
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentTab = urlParams.get('tab') || 'products';
+            const addVarRedirect = document.getElementById('addVarRedirectTab');
+            if (addVarRedirect) {
+                addVarRedirect.value = currentTab;
+            }
             document.getElementById('addVariantModal').style.display = 'flex';
         }
         function closeAddVariantModal() {
@@ -2253,6 +2212,12 @@
             document.getElementById('editVarColor').value = color;
             document.getElementById('editVarStock').value = stock;
             document.getElementById('editVarPrice').value = price;
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentTab = urlParams.get('tab') || 'products';
+            const editVarRedirect = document.getElementById('editVarRedirectTab');
+            if (editVarRedirect) {
+                editVarRedirect.value = currentTab;
+            }
             document.getElementById('editVariantModal').style.display = 'flex';
         }
         function closeEditVariantModal() {
@@ -2339,6 +2304,628 @@
             }
         }
 
+        const currentProductId = <%= prodId %>;
+
+        // AJAX Notification Alert system
+        function showBannerAlert(type, message) {
+            let container = document.getElementById('ajaxAlertContainer');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'ajaxAlertContainer';
+                container.style.position = 'fixed';
+                container.style.top = '80px';
+                container.style.right = '20px';
+                container.style.zIndex = '9999';
+                container.style.display = 'flex';
+                container.style.flexDirection = 'column';
+                container.style.gap = '10px';
+                document.body.appendChild(container);
+            }
+            
+            const alert = document.createElement('div');
+            alert.className = `alert alert-\${type}`;
+            alert.style.margin = '0';
+            alert.style.boxShadow = 'var(--shadow-lux)';
+            alert.style.minWidth = '300px';
+            alert.style.animation = 'fadeInRight 0.3s ease-out';
+            alert.style.display = 'flex';
+            alert.style.alignItems = 'center';
+            alert.style.gap = '10px';
+            
+            const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+            alert.innerHTML = `
+                <i class="fas \${icon}" style="color: \${type === 'success' ? 'var(--success)' : 'var(--danger)'};"></i>
+                <span style="font-size:0.85rem; font-weight:600; text-align:left;">\${message}</span>
+                <span style="margin-left:auto; cursor:pointer; font-weight:bold; font-size:1.1rem;" onclick="this.parentNode.remove()">&times;</span>
+            `;
+            
+            container.appendChild(alert);
+            
+            setTimeout(() => {
+                alert.style.animation = 'fadeOutRight 0.3s ease-in';
+                setTimeout(() => alert.remove(), 300);
+            }, 4000);
+        }
+
+        // Inline Stock update via AJAX
+        function updateStockAsync(productId) {
+            const stockInput = document.getElementById(`inline-stock-\${productId}`);
+            if (!stockInput) return;
+            const stock = stockInput.value;
+            
+            fetch('AdminServlet?format=json', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                    action: 'updateStock',
+                    id: productId,
+                    stock: stock,
+                    format: 'json'
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showBannerAlert('success', data.message);
+                    const row = document.querySelector(`.product-row[data-id="\${productId}"]`);
+                    if (row) {
+                        row.setAttribute('data-stock', stock);
+                        const labelDiv = stockInput.parentNode.nextElementSibling;
+                        if (labelDiv) {
+                            const icon = stock == 0 ? 'fa-times-circle' : (stock < 10 ? 'fa-exclamation-triangle' : 'fa-check-circle');
+                            const color = stock == 0 ? 'var(--danger)' : (stock < 10 ? 'var(--gold)' : 'var(--success)');
+                            const text = stock == 0 ? 'Out of Stock' : (stock < 10 ? 'Low Stock: ' + stock : 'In Stock');
+                            labelDiv.style.color = color;
+                            labelDiv.innerHTML = `<i class="fas \${icon}" style="margin-right:2px;"></i> \${text}`;
+                        }
+                    }
+                } else {
+                    showBannerAlert('danger', data.message);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showBannerAlert('danger', 'Failed to update stock.');
+            });
+        }
+
+        // Inline Status active/draft toggle via AJAX
+        function toggleStatusAsync(productId) {
+            fetch('AdminServlet?format=json', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                    action: 'toggleProductStatus',
+                    id: productId,
+                    format: 'json'
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showBannerAlert('success', data.message);
+                    const badge = document.getElementById(`status-badge-\${productId}`);
+                    const row = document.querySelector(`.product-row[data-id="\${productId}"]`);
+                    if (badge && row) {
+                        const currentStatus = row.getAttribute('data-status');
+                        const newStatus = currentStatus === 'ACTIVE' ? 'DRAFT' : 'ACTIVE';
+                        row.setAttribute('data-status', newStatus);
+                        
+                        badge.className = `status-badge \${newStatus === 'ACTIVE' ? 'status-completed' : 'status-cancelled'}`;
+                        badge.innerText = newStatus === 'ACTIVE' ? 'Active' : 'Draft';
+                    }
+                } else {
+                    showBannerAlert('danger', data.message);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showBannerAlert('danger', 'Failed to toggle status.');
+            });
+        }
+
+        // Delete product from Catalog list via AJAX
+        function deleteProductAsync(productId, productName) {
+            if (!confirm(`Are you sure you want to permanently delete product "\${productName}"?`)) {
+                return;
+            }
+            fetch('AdminServlet?format=json', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                    action: 'delete',
+                    id: productId,
+                    format: 'json'
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showBannerAlert('success', data.message);
+                    const row = document.querySelector(`.product-row[data-id="\${productId}"]`);
+                    if (row) {
+                        row.remove();
+                        updateSelectionState();
+                    }
+                } else {
+                    showBannerAlert('danger', data.message);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showBannerAlert('danger', 'Failed to delete product.');
+            });
+        }
+
+        // Checkbox controllers
+        function toggleSelectAll(selectAllCheckbox) {
+            const isChecked = selectAllCheckbox.checked;
+            const checkboxes = document.querySelectorAll('.product-select-checkbox');
+            checkboxes.forEach(cb => {
+                const row = cb.closest('.product-row');
+                if (row && row.style.display !== 'none') {
+                    cb.checked = isChecked;
+                }
+            });
+            updateSelectionState();
+        }
+
+        function updateSelectionState() {
+            const checkedBoxes = document.querySelectorAll('.product-select-checkbox:checked');
+            const totalVisible = Array.from(document.querySelectorAll('.product-select-checkbox')).filter(cb => {
+                const row = cb.closest('.product-row');
+                return row && row.style.display !== 'none';
+            });
+            
+            const selectAllCb = document.getElementById('selectAllCheckbox');
+            if (selectAllCb) {
+                selectAllCb.checked = (checkedBoxes.length > 0 && checkedBoxes.length === totalVisible.length);
+            }
+            
+            const toolbar = document.getElementById('bulkActionsToolbar');
+            const countLabel = document.getElementById('selectedCountLabel');
+            if (toolbar && countLabel) {
+                if (checkedBoxes.length > 0) {
+                    countLabel.innerText = `\${checkedBoxes.length} item(s) selected`;
+                    toolbar.style.display = 'flex';
+                } else {
+                    toolbar.style.display = 'none';
+                }
+            }
+        }
+
+        function performBulkAction(operation) {
+            const checkedBoxes = document.querySelectorAll('.product-select-checkbox:checked');
+            if (checkedBoxes.length === 0) return;
+            
+            const ids = Array.from(checkedBoxes).map(cb => cb.getAttribute('data-id'));
+            
+            let confirmMsg = `Are you sure you want to perform bulk "\${operation}" on \${ids.length} item(s)?`;
+            if (operation === 'delete') {
+                confirmMsg = `CRITICAL WARNING: Are you sure you want to permanently delete all \${ids.length} selected product(s)? This action is irreversible!`;
+            }
+            
+            if (!confirm(confirmMsg)) return;
+            
+            fetch('AdminServlet?format=json', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                    action: 'bulkProductAction',
+                    operation: operation,
+                    ids: ids.join(','),
+                    format: 'json'
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showBannerAlert('success', data.message);
+                    
+                    ids.forEach(id => {
+                        const row = document.querySelector(`.product-row[data-id="\${id}"]`);
+                        if (row) {
+                            if (operation === 'delete') {
+                                row.remove();
+                            } else {
+                                const statusVal = operation === 'activate' ? 'ACTIVE' : 'DRAFT';
+                                row.setAttribute('data-status', statusVal);
+                                const badge = document.getElementById(`status-badge-\${id}`);
+                                if (badge) {
+                                    badge.className = `status-badge \${statusVal === 'ACTIVE' ? 'status-completed' : 'status-cancelled'}`;
+                                    badge.innerText = statusVal === 'ACTIVE' ? 'Active' : 'Draft';
+                                }
+                                const cb = row.querySelector('.product-select-checkbox');
+                                if (cb) cb.checked = false;
+                            }
+                        }
+                    });
+                    
+                    updateSelectionState();
+                } else {
+                    showBannerAlert('danger', data.message);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showBannerAlert('danger', 'Bulk action failed.');
+            });
+        }
+
+        // Sorting catalog rows in-place
+        function sortCatalogRows(sortBy) {
+            const tbody = document.getElementById('catalogTableBody');
+            if (!tbody) return;
+            const rows = Array.from(tbody.querySelectorAll('.product-row'));
+            
+            rows.sort((a, b) => {
+                let valA, valB;
+                if (sortBy.startsWith('name')) {
+                    valA = a.getAttribute('data-name');
+                    valB = b.getAttribute('data-name');
+                    return sortBy.endsWith('asc') ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                } else if (sortBy.startsWith('price')) {
+                    valA = parseFloat(a.getAttribute('data-price') || '0');
+                    valB = parseFloat(b.getAttribute('data-price') || '0');
+                    return sortBy.endsWith('asc') ? valA - valB : valB - valA;
+                } else if (sortBy.startsWith('stock')) {
+                    valA = parseInt(a.getAttribute('data-stock') || '0', 10);
+                    valB = parseInt(b.getAttribute('data-stock') || '0', 10);
+                    return sortBy.endsWith('asc') ? valA - valB : valB - valA;
+                } else if (sortBy.startsWith('rating')) {
+                    valA = parseInt(a.getAttribute('data-rating') || '0', 10);
+                    valB = parseInt(b.getAttribute('data-rating') || '0', 10);
+                    return valB - valA;
+                } else { // default id_desc
+                    valA = parseInt(a.getAttribute('data-id') || '0', 10);
+                    valB = parseInt(b.getAttribute('data-id') || '0', 10);
+                    return valB - valA;
+                }
+            });
+            
+            rows.forEach(row => tbody.appendChild(row));
+        }
+
+        // Save specifications via AJAX
+        function saveSpecifications(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            formData.append('format', 'json');
+            
+            showBannerAlert('success', 'Saving specifications...');
+            fetch('AdminServlet?format=json', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showBannerAlert('success', data.message);
+                    const nameHeader = document.getElementById('detailsProductNameHeader');
+                    if (nameHeader) {
+                        nameHeader.innerText = form.name.value;
+                    }
+                } else {
+                    showBannerAlert('danger', data.message);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showBannerAlert('danger', 'Failed to save product specifications.');
+            });
+        }
+
+        // AJAX variant list and settings loader
+        function fetchVariantsList(productId, activeVariantId) {
+            const container = document.getElementById('variantsContainer');
+            if (!container) return;
+            
+            container.innerHTML = '<p style="color:var(--text-muted); text-align:center; font-size:0.85rem; padding:20px;">Updating variants list...</p>';
+            
+            let url = `getVariantsList.jsp?productId=\${productId}`;
+            if (activeVariantId > 0) {
+                url += `&activeVariantId=\${activeVariantId}`;
+            }
+            
+            fetch(url)
+                .then(res => res.text())
+                .then(html => {
+                    container.innerHTML = html;
+                    const editForm = document.getElementById('editActiveVariantForm');
+                    if (editForm) {
+                        const activeVarId = editForm.variantId.value;
+                        fetchVariantImages(activeVarId);
+                    }
+                })
+                .catch(err => {
+                    container.innerHTML = '<p style="color:var(--danger); font-size:0.8rem;">Failed to load variants configuration.</p>';
+                    console.error(err);
+                });
+        }
+
+        function selectVariantTab(variantId) {
+            fetchVariantsList(currentProductId, variantId);
+        }
+
+        function saveVariantDetails(event, variantId) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            formData.append('format', 'json');
+            
+            showBannerAlert('success', 'Saving shade details...');
+            fetch('AdminServlet?format=json', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showBannerAlert('success', data.message);
+                    fetchVariantsList(currentProductId, variantId);
+                    fetchGalleryImages(currentProductId);
+                } else {
+                    showBannerAlert('danger', data.message);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showBannerAlert('danger', 'Failed to save variant changes.');
+            });
+        }
+
+        function deleteVariantAsync(variantId, variantName) {
+            if (!confirm(`Are you sure you want to delete variant shade "\${variantName}"?`)) {
+                return;
+            }
+            fetch('AdminServlet?format=json', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                    action: 'deleteVariant',
+                    variantId: variantId,
+                    redirectTab: 'product-details',
+                    format: 'json'
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showBannerAlert('success', data.message);
+                    fetchVariantsList(currentProductId, 0);
+                    fetchGalleryImages(currentProductId);
+                } else {
+                    showBannerAlert('danger', data.message);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showBannerAlert('danger', 'Failed to delete variant.');
+            });
+        }
+
+        function fetchVariantImages(variantId) {
+            const grid = document.getElementById('variantImagesGridContainer');
+            if (!grid) return;
+            
+            grid.innerHTML = '<p style="color:var(--text-muted); text-align:center; font-size:0.8rem; padding:10px;">Loading variant photos...</p>';
+            
+            fetch(`getVariantImages.jsp?productId=\${currentProductId}&variantId=\${variantId}`)
+                .then(res => res.text())
+                .then(html => {
+                    grid.innerHTML = html;
+                })
+                .catch(err => {
+                    grid.innerHTML = '<p style="color:var(--danger); font-size:0.8rem;">Failed to load variant photos.</p>';
+                    console.error(err);
+                });
+        }
+
+        function setPrimaryVariantImage(imageId, variantId) {
+            fetch('AdminServlet?format=json', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                    action: 'setPrimaryVariantImage',
+                    imageId: imageId,
+                    variantId: variantId,
+                    productId: currentProductId,
+                    redirectTab: 'product-details',
+                    format: 'json'
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showBannerAlert('success', data.message);
+                    fetchVariantImages(variantId);
+                    fetchGalleryImages(currentProductId);
+                } else {
+                    showBannerAlert('danger', data.message);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showBannerAlert('danger', 'Failed to set primary variant image.');
+            });
+        }
+
+        function setProductCoverImage(imageUrl, productId) {
+            fetch('AdminServlet?format=json', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                    action: 'setProductCoverImage',
+                    productId: productId,
+                    imageUrl: imageUrl,
+                    redirectTab: 'product-details',
+                    format: 'json'
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showBannerAlert('success', data.message);
+                    const coverInput = document.querySelector('input[name="imageUrl"]');
+                    if (coverInput) coverInput.value = imageUrl;
+                    
+                    fetchGalleryImages(productId);
+                    const editForm = document.getElementById('editActiveVariantForm');
+                    if (editForm) {
+                        const activeVarId = editForm.variantId.value;
+                        fetchVariantImages(activeVarId);
+                    }
+                } else {
+                    showBannerAlert('danger', data.message);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showBannerAlert('danger', 'Failed to update cover image.');
+            });
+        }
+
+        function deleteVariantImage(imageId, variantId) {
+            if (!confirm('Permanently delete this variant image from gallery?')) return;
+            fetch('AdminServlet?format=json', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                    action: 'deleteProductImage',
+                    imageId: imageId,
+                    productId: currentProductId,
+                    redirectTab: 'product-details',
+                    format: 'json'
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showBannerAlert('success', data.message);
+                    fetchVariantImages(variantId);
+                    fetchGalleryImages(currentProductId);
+                } else {
+                    showBannerAlert('danger', data.message);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showBannerAlert('danger', 'Failed to delete variant image.');
+            });
+        }
+
+        function openVariantImageUploadModal(variantId) {
+            let fileInput = document.getElementById('ajaxVariantImageInput');
+            if (!fileInput) {
+                fileInput = document.createElement('input');
+                fileInput.id = 'ajaxVariantImageInput';
+                fileInput.type = 'file';
+                fileInput.name = 'variantImages';
+                fileInput.multiple = true;
+                fileInput.accept = 'image/*';
+                fileInput.style.display = 'none';
+                document.body.appendChild(fileInput);
+                
+                fileInput.onchange = function() {
+                    if (fileInput.files.length === 0) return;
+                    
+                    const formData = new FormData();
+                    formData.append('action', 'uploadVariantImages');
+                    formData.append('productId', currentProductId);
+                    formData.append('variantId', fileInput.getAttribute('data-variant-id'));
+                    formData.append('redirectTab', 'product-details');
+                    formData.append('format', 'json');
+                    for (let file of fileInput.files) {
+                        formData.append('variantImages', file);
+                    }
+                    
+                    showBannerAlert('success', 'Uploading variant photos...');
+                    fetch('AdminServlet?format=json', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            showBannerAlert('success', data.message);
+                            fetchVariantImages(fileInput.getAttribute('data-variant-id'));
+                            fetchGalleryImages(currentProductId);
+                        } else {
+                            showBannerAlert('danger', data.message);
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        showBannerAlert('danger', 'Failed to upload variant photos.');
+                    });
+                };
+            }
+            fileInput.setAttribute('data-variant-id', variantId);
+            fileInput.value = '';
+            fileInput.click();
+        }
+
+        function uploadGeneralImages(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            formData.append('format', 'json');
+            
+            showBannerAlert('success', 'Uploading gallery photos...');
+            fetch('AdminServlet?format=json', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showBannerAlert('success', data.message);
+                    form.reset();
+                    fetchGalleryImages(currentProductId);
+                } else {
+                    showBannerAlert('danger', data.message);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showBannerAlert('danger', 'Failed to upload gallery photos.');
+            });
+        }
+
+        function deleteProductImageAsync(imageId, productId) {
+            if (!confirm('Delete this image from gallery?')) return;
+            fetch('AdminServlet?format=json', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                    action: 'deleteProductImage',
+                    imageId: imageId,
+                    productId: productId,
+                    redirectTab: 'product-details',
+                    format: 'json'
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showBannerAlert('success', data.message);
+                    fetchGalleryImages(productId);
+                    const editForm = document.getElementById('editActiveVariantForm');
+                    if (editForm) {
+                        const activeVarId = editForm.variantId.value;
+                        fetchVariantImages(activeVarId);
+                    }
+                } else {
+                    showBannerAlert('danger', data.message);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showBannerAlert('danger', 'Failed to delete image.');
+            });
+        }
+
         // --- NEW FILTER CONTROLLERS ---
         function filterCatalog() {
             const search = document.getElementById('catalogSearch').value.toLowerCase();
@@ -2346,8 +2933,9 @@
             const status = document.getElementById('statusFilter').value;
             const stockLevel = document.getElementById('stockFilter').value;
             const onSale = document.getElementById('onSaleFilter').value;
+            const sortBy = document.getElementById('sortSelector').value;
             
-            const rows = document.querySelectorAll('.product-row');
+            const rows = document.querySelectorAll('#catalogTableBody .product-row');
             rows.forEach(row => {
                 const name = row.getAttribute('data-name') || '';
                 const sku = row.getAttribute('data-sku') || '';
@@ -2375,19 +2963,17 @@
                     matchesSale = !sale;
                 }
                 
-                const nextRow = row.nextElementSibling;
                 if (matchesSearch && matchesCategory && matchesStatus && matchesStock && matchesSale) {
                     row.style.display = '';
-                    if (nextRow && nextRow.classList.contains('variants-row')) {
-                        nextRow.style.display = '';
-                    }
                 } else {
                     row.style.display = 'none';
-                    if (nextRow && nextRow.classList.contains('variants-row')) {
-                        nextRow.style.display = 'none';
-                    }
+                    const cb = row.querySelector('.product-select-checkbox');
+                    if (cb) cb.checked = false;
                 }
             });
+            
+            updateSelectionState();
+            sortCatalogRows(sortBy);
         }
 
         function searchReviews() {
@@ -2425,6 +3011,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             <% if ("product-details".equalsIgnoreCase(activeTab) && prodId > 0) { %>
                 fetchGalleryImages(<%= prodId %>);
+                fetchVariantsList(<%= prodId %>, 0);
             <% } %>
         });
 
@@ -2651,6 +3238,20 @@
                         }
                     }
                 });
+            }
+        });
+
+        // Save scroll position before unloading the page to prevent losing position on saves/uploads
+        window.addEventListener('beforeunload', () => {
+            localStorage.setItem('adminScrollY', window.scrollY);
+        });
+
+        // Restore scroll position after DOM content is loaded
+        window.addEventListener('DOMContentLoaded', () => {
+            const scrollY = localStorage.getItem('adminScrollY');
+            if (scrollY !== null) {
+                window.scrollTo(0, parseInt(scrollY, 10));
+                localStorage.removeItem('adminScrollY');
             }
         });
     </script>

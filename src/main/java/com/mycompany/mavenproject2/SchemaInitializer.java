@@ -25,6 +25,10 @@ public class SchemaInitializer {
             // 2. Update reviews table columns
             ensureColumn(con, "reviews", "is_hidden", "TINYINT(1) DEFAULT 0");
 
+            // 2b. Update product_variants table columns
+            ensureColumn(con, "product_variants", "custom_label", "VARCHAR(255) DEFAULT NULL");
+            ensureColumn(con, "product_variants", "is_visible", "TINYINT(1) DEFAULT 1");
+
             // 3. Create announcements table
             if (!tableExists(con, "announcements")) {
                 try (Statement st = con.createStatement()) {

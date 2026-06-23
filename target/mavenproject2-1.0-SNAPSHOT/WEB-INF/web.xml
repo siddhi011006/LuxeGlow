@@ -4,6 +4,24 @@
    xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
    version="6.0">
 
+    <filter>
+        <filter-name>AdminSecurityFilter</filter-name>
+        <filter-class>com.mycompany.mavenproject2.AdminSecurityFilter</filter-class>
+    </filter>
+    
+    <filter-mapping>
+        <filter-name>AdminSecurityFilter</filter-name>
+        <url-pattern>/admin</url-pattern>
+        <url-pattern>/admin/*</url-pattern>
+        <url-pattern>/AdminServlet</url-pattern>
+        <url-pattern>/admin-login</url-pattern>
+        <url-pattern>/admin-login.jsp</url-pattern>
+        <url-pattern>/admin-logout</url-pattern>
+        <url-pattern>/getGalleryImages.jsp</url-pattern>
+        <url-pattern>/email-diagnostics.jsp</url-pattern>
+        <url-pattern>/access-denied.jsp</url-pattern>
+    </filter-mapping>
+
     <session-config>
         <session-timeout>
             30

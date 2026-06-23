@@ -119,8 +119,9 @@ public class AdminServlet extends HttpServlet {
                 
                 // Add the primary image to product_images automatically
                 ResultSet rsKeys = ps.getGeneratedKeys();
+                int newProductId = 0;
                 if (rsKeys.next()) {
-                    int newProductId = rsKeys.getInt(1);
+                    newProductId = rsKeys.getInt(1);
                     String imgSql = "INSERT INTO product_images (product_id, image_url, sort_order, is_primary, variant_id) VALUES (?, ?, 0, 1, NULL)";
                     PreparedStatement imgPs = con.prepareStatement(imgSql);
                     imgPs.setInt(1, newProductId);
@@ -129,7 +130,9 @@ public class AdminServlet extends HttpServlet {
                     imgPs.close();
                 }
                 
-                response.sendRedirect("admin?tab=products&success=Product added successfully!");
+                java.util.Map<String, Object> extra = new java.util.HashMap<>();
+                extra.put("productId", newProductId);
+                sendRedirectOrJson(request, response, "admin?tab=products&success=Product added successfully!", "success", "Product added successfully!", extra);
 
             } else if ("edit".equalsIgnoreCase(action)) {
                 int id = Integer.parseInt(request.getParameter("id"));
@@ -181,12 +184,14 @@ public class AdminServlet extends HttpServlet {
                 ps.setInt(14, id);
                 ps.executeUpdate();
                 
+                java.util.Map<String, Object> extra = new java.util.HashMap<>();
+                extra.put("productId", id);
                 String redirectTab = request.getParameter("redirectTab");
+                String dest = "admin?tab=products&success=Product updated successfully!";
                 if ("product-details".equalsIgnoreCase(redirectTab)) {
-                    response.sendRedirect("admin?tab=product-details&id=" + id + "&success=Product updated successfully!");
-                } else {
-                    response.sendRedirect("admin?tab=products&success=Product updated successfully!");
+                    dest = "admin?tab=product-details&id=" + id + "&success=Product updated successfully!";
                 }
+                sendRedirectOrJson(request, response, dest, "success", "Product updated successfully!", extra);
 
             } else if ("delete".equalsIgnoreCase(action)) {
                 int id = Integer.parseInt(request.getParameter("id"));
@@ -196,7 +201,7 @@ public class AdminServlet extends HttpServlet {
                 ps.setInt(1, id);
                 ps.executeUpdate();
                 
-                response.sendRedirect("admin?tab=products&success=Product deleted successfully!");
+                sendRedirectOrJson(request, response, "admin?tab=products&success=Product deleted successfully!", "success", "Product deleted successfully!");
 
             } else if ("updateStock".equalsIgnoreCase(action)) {
                 int id = Integer.parseInt(request.getParameter("id"));
@@ -207,8 +212,40 @@ public class AdminServlet extends HttpServlet {
                 ps.setInt(1, stock);
                 ps.setInt(2, id);
                 ps.executeUpdate();
+                ps.close();
                 
-                response.sendRedirect("admin?tab=products&success=Product stock quantity updated successfully.");
+                String redirectTab = request.getParameter("redirectTab");
+                String dest = "admin?tab=products&success=Product stock quantity updated successfully.";
+                if ("product-details".equalsIgnoreCase(redirectTab)) {
+                    dest = "admin?tab=product-details&id=" + id + "&success=Product stock quantity updated successfully.";
+                }
+                sendRedirectOrJson(request, response, dest, "success", "Product stock quantity updated successfully.");
+
+            } else if ("toggleProductStatus".equalsIgnoreCase(action)) {
+                int id = Integer.parseInt(request.getParameter("id"));
+                String currentStatus = null;
+                try (PreparedStatement psGet = con.prepareStatement("SELECT status FROM products WHERE id = ?")) {
+                    psGet.setInt(1, id);
+                    try (ResultSet rsGet = psGet.executeQuery()) {
+                        if (rsGet.next()) {
+                            currentStatus = rsGet.getString("status");
+                        }
+                    }
+                }
+                String newStatus = "ACTIVE".equalsIgnoreCase(currentStatus) ? "DRAFT" : "ACTIVE";
+                String sql = "UPDATE products SET status=? WHERE id=?";
+                PreparedStatement ps = con.prepareStatement(sql);
+                ps.setString(1, newStatus);
+                ps.setInt(2, id);
+                ps.executeUpdate();
+                ps.close();
+
+                String redirectTab = request.getParameter("redirectTab");
+                String dest = "admin?tab=products&success=Product visibility status updated successfully.";
+                if ("product-details".equalsIgnoreCase(redirectTab)) {
+                    dest = "admin?tab=product-details&id=" + id + "&success=Product visibility status updated successfully.";
+                }
+                sendRedirectOrJson(request, response, dest, "success", "Product visibility status updated successfully.");
 
             } else if ("updateOrder".equalsIgnoreCase(action)) {
                 int orderId = Integer.parseInt(request.getParameter("orderId"));
@@ -346,7 +383,6 @@ public class AdminServlet extends HttpServlet {
 
             } 
             
-            // --- NEW: PRODUCT VARIANTS MANAGEMENT ---
             else if ("addVariant".equalsIgnoreCase(action)) {
                 int productId = Integer.parseInt(request.getParameter("productId"));
                 String name = request.getParameter("name");
@@ -357,8 +393,16 @@ public class AdminServlet extends HttpServlet {
                 if (priceStr != null && !priceStr.trim().isEmpty()) {
                     price = Double.parseDouble(priceStr);
                 }
+                String customLabel = request.getParameter("customLabel");
+                String isVisibleStr = request.getParameter("isVisible");
+                int isVisible = 1;
+                if (isVisibleStr != null && !isVisibleStr.trim().isEmpty()) {
+                    try {
+                        isVisible = Integer.parseInt(isVisibleStr.trim());
+                    } catch (Exception e) {}
+                }
 
-                String sql = "INSERT INTO product_variants (product_id, variant_name, color_code, stock, price) VALUES (?, ?, ?, ?, ?)";
+                String sql = "INSERT INTO product_variants (product_id, variant_name, color_code, stock, price, custom_label, is_visible) VALUES (?, ?, ?, ?, ?, ?, ?)";
                 PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
                 ps.setInt(1, productId);
                 ps.setString(2, name);
@@ -369,6 +413,8 @@ public class AdminServlet extends HttpServlet {
                 } else {
                     ps.setNull(5, java.sql.Types.DECIMAL);
                 }
+                ps.setString(6, customLabel);
+                ps.setInt(7, isVisible);
                 ps.executeUpdate();
 
                 ResultSet rsKeys = ps.getGeneratedKeys();
@@ -395,12 +441,16 @@ public class AdminServlet extends HttpServlet {
                     imgPs.close();
                 }
 
+                java.util.Map<String, Object> extra = new java.util.HashMap<>();
+                extra.put("variantId", variantId);
+                extra.put("productId", productId);
+                
                 String redirectTab = request.getParameter("redirectTab");
+                String dest = "admin?tab=products&success=Variant added successfully!";
                 if ("product-details".equalsIgnoreCase(redirectTab)) {
-                    response.sendRedirect("admin?tab=product-details&id=" + productId + "&success=Variant added successfully!");
-                } else {
-                    response.sendRedirect("admin?tab=products&success=Variant added successfully!");
+                    dest = "admin?tab=product-details&id=" + productId + "&success=Variant added successfully!";
                 }
+                sendRedirectOrJson(request, response, dest, "success", "Variant added successfully!", extra);
 
             } else if ("editVariant".equalsIgnoreCase(action)) {
                 int variantId = Integer.parseInt(request.getParameter("variantId"));
@@ -413,8 +463,16 @@ public class AdminServlet extends HttpServlet {
                 if (priceStr != null && !priceStr.trim().isEmpty()) {
                     price = Double.parseDouble(priceStr);
                 }
+                String customLabel = request.getParameter("customLabel");
+                String isVisibleStr = request.getParameter("isVisible");
+                int isVisible = 1;
+                if (isVisibleStr != null && !isVisibleStr.trim().isEmpty()) {
+                    try {
+                        isVisible = Integer.parseInt(isVisibleStr.trim());
+                    } catch (Exception e) {}
+                }
 
-                String sql = "UPDATE product_variants SET variant_name = ?, color_code = ?, stock = ?, price = ? WHERE id = ?";
+                String sql = "UPDATE product_variants SET variant_name = ?, color_code = ?, stock = ?, price = ?, custom_label = ?, is_visible = ? WHERE id = ?";
                 PreparedStatement ps = con.prepareStatement(sql);
                 ps.setString(1, name);
                 ps.setString(2, colorCode);
@@ -424,7 +482,9 @@ public class AdminServlet extends HttpServlet {
                 } else {
                     ps.setNull(4, java.sql.Types.DECIMAL);
                 }
-                ps.setInt(5, variantId);
+                ps.setString(5, customLabel);
+                ps.setInt(6, isVisible);
+                ps.setInt(7, variantId);
                 ps.executeUpdate();
                 ps.close();
 
@@ -445,12 +505,16 @@ public class AdminServlet extends HttpServlet {
                     imgPs.close();
                 }
 
+                java.util.Map<String, Object> extra = new java.util.HashMap<>();
+                extra.put("variantId", variantId);
+                extra.put("productId", productId);
+                
                 String redirectTab = request.getParameter("redirectTab");
+                String dest = "admin?tab=products&success=Variant updated successfully!";
                 if ("product-details".equalsIgnoreCase(redirectTab)) {
-                    response.sendRedirect("admin?tab=product-details&id=" + productId + "&success=Variant updated successfully!");
-                } else {
-                    response.sendRedirect("admin?tab=products&success=Variant updated successfully!");
+                    dest = "admin?tab=product-details&id=" + productId + "&success=Variant updated successfully!";
                 }
+                sendRedirectOrJson(request, response, dest, "success", "Variant updated successfully!", extra);
 
             } else if ("deleteVariant".equalsIgnoreCase(action)) {
                 int variantId = Integer.parseInt(request.getParameter("variantId"));
@@ -471,11 +535,11 @@ public class AdminServlet extends HttpServlet {
                 ps.close();
 
                 String redirectTab = request.getParameter("redirectTab");
+                String dest = "admin?tab=products&success=Variant deleted successfully.";
                 if ("product-details".equalsIgnoreCase(redirectTab) && productId > 0) {
-                    response.sendRedirect("admin?tab=product-details&id=" + productId + "&success=Variant deleted successfully.");
-                } else {
-                    response.sendRedirect("admin?tab=products&success=Variant deleted successfully.");
+                    dest = "admin?tab=product-details&id=" + productId + "&success=Variant deleted successfully.";
                 }
+                sendRedirectOrJson(request, response, dest, "success", "Variant deleted successfully.");
 
             }
             
@@ -499,11 +563,11 @@ public class AdminServlet extends HttpServlet {
                 }
 
                 String redirectTab = request.getParameter("redirectTab");
+                String dest = "admin?tab=products&success=Images uploaded successfully!";
                 if ("product-details".equalsIgnoreCase(redirectTab)) {
-                    response.sendRedirect("admin?tab=product-details&id=" + productId + "&success=Images uploaded successfully!");
-                } else {
-                    response.sendRedirect("admin?tab=products&success=Images uploaded successfully!");
+                    dest = "admin?tab=product-details&id=" + productId + "&success=Images uploaded successfully!";
                 }
+                sendRedirectOrJson(request, response, dest, "success", "Images uploaded successfully!");
 
             } else if ("deleteProductImage".equalsIgnoreCase(action)) {
                 int imageId = Integer.parseInt(request.getParameter("imageId"));
@@ -524,11 +588,11 @@ public class AdminServlet extends HttpServlet {
                 ps.close();
 
                 String redirectTab = request.getParameter("redirectTab");
+                String dest = "admin?tab=products&success=Image deleted successfully.";
                 if ("product-details".equalsIgnoreCase(redirectTab) && productId > 0) {
-                    response.sendRedirect("admin?tab=product-details&id=" + productId + "&success=Image deleted successfully.");
-                } else {
-                    response.sendRedirect("admin?tab=products&success=Image deleted successfully.");
+                    dest = "admin?tab=product-details&id=" + productId + "&success=Image deleted successfully.";
                 }
+                sendRedirectOrJson(request, response, dest, "success", "Image deleted successfully.");
 
             } else if ("setPrimaryProductImage".equalsIgnoreCase(action)) {
                 int imageId = Integer.parseInt(request.getParameter("imageId"));
@@ -566,11 +630,11 @@ public class AdminServlet extends HttpServlet {
                 selectPs.close();
 
                 String redirectTab = request.getParameter("redirectTab");
+                String dest = "admin?tab=products&success=Primary image updated successfully.";
                 if ("product-details".equalsIgnoreCase(redirectTab)) {
-                    response.sendRedirect("admin?tab=product-details&id=" + productId + "&success=Primary image updated successfully.");
-                } else {
-                    response.sendRedirect("admin?tab=products&success=Primary image updated successfully.");
+                    dest = "admin?tab=product-details&id=" + productId + "&success=Primary image updated successfully.";
                 }
+                sendRedirectOrJson(request, response, dest, "success", "Primary image updated successfully.");
 
             } else if ("reorderProductImages".equalsIgnoreCase(action)) {
                 String imageOrder = request.getParameter("imageOrder");
@@ -599,11 +663,114 @@ public class AdminServlet extends HttpServlet {
 
                 String redirectTab = request.getParameter("redirectTab");
                 String pIdStr = request.getParameter("productId");
+                String dest = "admin?tab=products&success=Image order updated successfully.";
                 if ("product-details".equalsIgnoreCase(redirectTab) && pIdStr != null) {
-                    response.sendRedirect("admin?tab=product-details&id=" + pIdStr + "&success=Image order updated successfully.");
-                } else {
-                    response.sendRedirect("admin?tab=products&success=Image order updated successfully.");
+                    dest = "admin?tab=product-details&id=" + pIdStr + "&success=Image order updated successfully.";
                 }
+                sendRedirectOrJson(request, response, dest, "success", "Image order updated successfully.");
+
+            } else if ("uploadVariantImages".equalsIgnoreCase(action)) {
+                int productId = Integer.parseInt(request.getParameter("productId"));
+                int variantId = Integer.parseInt(request.getParameter("variantId"));
+                
+                List<String> imageUrls = uploadMultipleFiles(request, "variantImages");
+                if (!imageUrls.isEmpty()) {
+                    String imgSql = "INSERT INTO product_images (product_id, image_url, sort_order, is_primary, variant_id) VALUES (?, ?, ?, 0, ?)";
+                    PreparedStatement imgPs = con.prepareStatement(imgSql);
+                    int order = 0;
+                    for (String url : imageUrls) {
+                        imgPs.setInt(1, productId);
+                        imgPs.setString(2, url);
+                        imgPs.setInt(3, order++);
+                        imgPs.setInt(4, variantId);
+                        imgPs.addBatch();
+                    }
+                    imgPs.executeBatch();
+                    imgPs.close();
+                }
+
+                String redirectTab = request.getParameter("redirectTab");
+                String dest = "admin?tab=products&success=Variant images uploaded successfully!";
+                if ("product-details".equalsIgnoreCase(redirectTab)) {
+                    dest = "admin?tab=product-details&id=" + productId + "&variantId=" + variantId + "&success=Variant images uploaded successfully!";
+                }
+                sendRedirectOrJson(request, response, dest, "success", "Variant images uploaded successfully!");
+
+            } else if ("setPrimaryVariantImage".equalsIgnoreCase(action)) {
+                int imageId = Integer.parseInt(request.getParameter("imageId"));
+                int variantId = Integer.parseInt(request.getParameter("variantId"));
+                int productId = Integer.parseInt(request.getParameter("productId"));
+
+                // Clear existing primary for this variant
+                String clearSql = "UPDATE product_images SET is_primary = 0 WHERE variant_id = ?";
+                try (PreparedStatement clearPs = con.prepareStatement(clearSql)) {
+                    clearPs.setInt(1, variantId);
+                    clearPs.executeUpdate();
+                }
+
+                // Set new primary
+                String setSql = "UPDATE product_images SET is_primary = 1 WHERE id = ?";
+                try (PreparedStatement setPs = con.prepareStatement(setSql)) {
+                    setPs.setInt(1, imageId);
+                    setPs.executeUpdate();
+                }
+
+                String redirectTab = request.getParameter("redirectTab");
+                String dest = "admin?tab=products&success=Variant primary image updated successfully.";
+                if ("product-details".equalsIgnoreCase(redirectTab)) {
+                    dest = "admin?tab=product-details&id=" + productId + "&variantId=" + variantId + "&success=Variant primary image updated successfully.";
+                }
+                sendRedirectOrJson(request, response, dest, "success", "Variant primary image updated successfully.");
+
+            } else if ("setProductCoverImage".equalsIgnoreCase(action)) {
+                int productId = Integer.parseInt(request.getParameter("productId"));
+                String imageUrl = request.getParameter("imageUrl");
+
+                String sql = "UPDATE products SET image_url = ? WHERE id = ?";
+                try (PreparedStatement ps = con.prepareStatement(sql)) {
+                    ps.setString(1, imageUrl);
+                    ps.setInt(2, productId);
+                    ps.executeUpdate();
+                }
+
+                String redirectTab = request.getParameter("redirectTab");
+                String dest = "admin?tab=products&success=Product cover image updated successfully.";
+                if ("product-details".equalsIgnoreCase(redirectTab)) {
+                    dest = "admin?tab=product-details&id=" + productId + "&success=Product cover image updated successfully.";
+                }
+                sendRedirectOrJson(request, response, dest, "success", "Product cover image updated successfully.");
+
+            } else if ("bulkProductAction".equalsIgnoreCase(action)) {
+                String operation = request.getParameter("operation");
+                String idsStr = request.getParameter("ids");
+                if (idsStr != null && !idsStr.trim().isEmpty()) {
+                    String[] idArray = idsStr.split(",");
+                    if ("delete".equalsIgnoreCase(operation)) {
+                        String sql = "DELETE FROM products WHERE id = ?";
+                        try (PreparedStatement ps = con.prepareStatement(sql)) {
+                            for (String idStr : idArray) {
+                                ps.setInt(1, Integer.parseInt(idStr.trim()));
+                                ps.addBatch();
+                            }
+                            ps.executeBatch();
+                        }
+                    } else if ("activate".equalsIgnoreCase(operation) || "draft".equalsIgnoreCase(operation)) {
+                        String statusVal = "activate".equalsIgnoreCase(operation) ? "ACTIVE" : "DRAFT";
+                        String sql = "UPDATE products SET status = ? WHERE id = ?";
+                        try (PreparedStatement ps = con.prepareStatement(sql)) {
+                            for (String idStr : idArray) {
+                                ps.setString(1, statusVal);
+                                ps.setInt(2, Integer.parseInt(idStr.trim()));
+                                ps.addBatch();
+                            }
+                            ps.executeBatch();
+                        }
+                    }
+                }
+                
+                String redirectTab = request.getParameter("redirectTab");
+                String dest = "admin?tab=products&success=Bulk action completed successfully.";
+                sendRedirectOrJson(request, response, dest, "success", "Bulk action completed successfully.");
 
             } else if ("addPromotion".equalsIgnoreCase(action)) {
                 String name = request.getParameter("name");
@@ -830,7 +997,58 @@ public class AdminServlet extends HttpServlet {
 
         } catch (Exception e) {
             e.printStackTrace();
-            response.sendRedirect("admin?tab=" + tab + "&error=Operation failed: " + java.net.URLEncoder.encode(e.getMessage(), "UTF-8"));
+            String format = request.getParameter("format");
+            if ("json".equalsIgnoreCase(format)) {
+                response.setContentType("application/json;charset=UTF-8");
+                try {
+                    java.io.PrintWriter out = response.getWriter();
+                    String msg = e.getMessage() != null ? e.getMessage() : "Unknown error";
+                    out.print("{\"status\":\"error\",\"message\":\"" + msg.replace("\"", "\\\"") + "\"}");
+                    out.flush();
+                } catch (IOException ioEx) {
+                    ioEx.printStackTrace();
+                }
+            } else {
+                response.sendRedirect("admin?tab=" + tab + "&error=Operation failed: " + java.net.URLEncoder.encode(e.getMessage() != null ? e.getMessage() : "Unknown error", "UTF-8"));
+            }
+        }
+    }
+
+    private void sendRedirectOrJson(HttpServletRequest request, HttpServletResponse response, String redirectUrl, String status, String message) throws IOException {
+        sendRedirectOrJson(request, response, redirectUrl, status, message, null);
+    }
+
+    private void sendRedirectOrJson(HttpServletRequest request, HttpServletResponse response, String redirectUrl, String status, String message, java.util.Map<String, Object> extra) throws IOException {
+        String format = request.getParameter("format");
+        if ("json".equalsIgnoreCase(format)) {
+            response.setContentType("application/json;charset=UTF-8");
+            java.io.PrintWriter out = response.getWriter();
+            StringBuilder sb = new StringBuilder();
+            sb.append("{");
+            sb.append("\"status\":\"").append(status.replace("\"", "\\\"")).append("\",");
+            sb.append("\"message\":\"").append(message.replace("\"", "\\\"")).append("\"");
+            if (extra != null && !extra.isEmpty()) {
+                for (java.util.Map.Entry<String, Object> entry : extra.entrySet()) {
+                    sb.append(",\"");
+                    sb.append(entry.getKey().replace("\"", "\\\""));
+                    sb.append("\":");
+                    Object val = entry.getValue();
+                    if (val instanceof Number) {
+                        sb.append(val);
+                    } else if (val instanceof Boolean) {
+                        sb.append(val);
+                    } else if (val == null) {
+                        sb.append("null");
+                    } else {
+                        sb.append("\"").append(val.toString().replace("\"", "\\\"")).append("\"");
+                    }
+                }
+            }
+            sb.append("}");
+            out.print(sb.toString());
+            out.flush();
+        } else {
+            response.sendRedirect(redirectUrl);
         }
     }
 

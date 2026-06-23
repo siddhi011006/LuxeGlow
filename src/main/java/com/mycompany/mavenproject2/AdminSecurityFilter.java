@@ -7,7 +7,6 @@ import jakarta.servlet.FilterConfig;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
-import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -19,16 +18,6 @@ import jakarta.servlet.http.HttpSession;
  * 
  * @author Antigravity
  */
-@WebFilter(urlPatterns = {
-    "/admin",
-    "/AdminServlet",
-    "/admin-login.jsp",
-    "/admin-login",
-    "/admin-logout",
-    "/getGalleryImages.jsp",
-    "/email-diagnostics.jsp",
-    "/access-denied.jsp"
-})
 public class AdminSecurityFilter implements Filter {
 
     @Override
@@ -58,6 +47,7 @@ public class AdminSecurityFilter implements Filter {
         } else {
             // Redirect to home page
             httpResponse.sendRedirect(httpRequest.getContextPath() + "/");
+            return;
         }
     }
 

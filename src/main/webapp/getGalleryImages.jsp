@@ -58,23 +58,11 @@
     <div style="display:flex; align-items:center; gap:6px;">
         <% if (isPrimary == 1) { %>
             <span style="font-size:0.65rem; font-weight:700; color:var(--gold); border:1px solid var(--gold); padding:3px 8px; border-radius:12px; background:rgba(197,171,87,0.05);"><i class="fas fa-star" style="margin-right:3px;"></i> Main Image</span>
-        <% } else if (vName == null) { %>
-            <form action="AdminServlet" method="POST" style="margin:0;">
-                <input type="hidden" name="action" value="setPrimaryProductImage">
-                <input type="hidden" name="imageId" value="<%= imgId %>">
-                <input type="hidden" name="productId" value="<%= productId %>">
-                <input type="hidden" name="redirectTab" value="product-details">
-                <button type="submit" class="btn-outline" style="padding:4px 8px; font-size:0.65rem; border-radius:6px; text-transform:none;">Set Main</button>
-            </form>
+        <% } else { %>
+            <button type="button" class="btn-outline" onclick="setPrimaryProductImage(<%= imgId %>, <%= productId %>)" style="padding:4px 8px; font-size:0.65rem; border-radius:6px; text-transform:none; cursor:pointer;">Set Main</button>
         <% } %>
         
-        <form action="AdminServlet" method="POST" style="margin:0;" onsubmit="return confirm('Delete this image from gallery?');">
-            <input type="hidden" name="action" value="deleteProductImage">
-            <input type="hidden" name="imageId" value="<%= imgId %>">
-            <input type="hidden" name="productId" value="<%= productId %>">
-            <input type="hidden" name="redirectTab" value="product-details">
-            <button type="submit" style="background:transparent; border:none; color:var(--danger); cursor:pointer; font-size:1.1rem; padding:4px 8px; display:inline-flex; align-items:center;"><i class="fas fa-trash-alt"></i></button>
-        </form>
+        <button type="button" onclick="deleteProductImageAsync(<%= imgId %>, <%= productId %>)" style="background:transparent; border:none; color:var(--danger); cursor:pointer; font-size:1.1rem; padding:4px 8px; display:inline-flex; align-items:center;"><i class="fas fa-trash-alt"></i></button>
     </div>
 </div>
 <%
@@ -125,7 +113,7 @@
         const items = document.querySelectorAll('.draggable-image-item');
         const ids = Array.from(items).map(item => item.getAttribute('data-image-id'));
         
-        fetch('AdminServlet', {
+        fetch('AdminServlet?format=json', {
             method: 'POST',
             body: new URLSearchParams({
                 action: 'reorderProductImages',
