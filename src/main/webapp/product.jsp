@@ -133,6 +133,27 @@
             cursor: not-allowed;
             pointer-events: none;
         }
+        #productGrid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+            margin-top: 40px;
+        }
+        @media (min-width: 576px) {
+            #productGrid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (min-width: 768px) {
+            #productGrid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        @media (min-width: 1024px) {
+            #productGrid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
     </style>
 </head>
 <body>
@@ -206,16 +227,32 @@
         <!-- Category Tabs Navigation -->
         <div class="filter-categories-tabs">
             <button class="cat-tab <%= "all".equals(paramCategory) ? "active" : "" %>" onclick="setCategory('all')">All Products</button>
-            <button class="cat-tab <%= "Skincare".equalsIgnoreCase(paramCategory) ? "active" : "" %>" onclick="setCategory('Skincare')">Skincare</button>
-            <button class="cat-tab <%= "Makeup".equalsIgnoreCase(paramCategory) ? "active" : "" %>" onclick="setCategory('Makeup')">Makeup</button>
-            <button class="cat-tab <%= "Haircare".equalsIgnoreCase(paramCategory) ? "active" : "" %>" onclick="setCategory('Haircare')">Haircare</button>
-            <button class="cat-tab <%= "Bodycare".equalsIgnoreCase(paramCategory) ? "active" : "" %>" onclick="setCategory('Bodycare')">Bodycare</button>
-            <button class="cat-tab <%= "Fragrances".equalsIgnoreCase(paramCategory) ? "active" : "" %>" onclick="setCategory('Fragrances')">Fragrances</button>
-            <button class="cat-tab <%= "Accessories".equalsIgnoreCase(paramCategory) ? "active" : "" %>" onclick="setCategory('Accessories')">Accessories</button>
+            <%
+                Connection conTab = null;
+                Statement stTab = null;
+                ResultSet rsTab = null;
+                try {
+                    conTab = DBConnection.getConnection();
+                    stTab = conTab.createStatement();
+                    rsTab = stTab.executeQuery("SELECT name FROM categories ORDER BY name ASC");
+                    while (rsTab.next()) {
+                        String catName = rsTab.getString("name");
+            %>
+            <button class="cat-tab <%= catName.equalsIgnoreCase(paramCategory) ? "active" : "" %>" onclick="setCategory('<%= catName.replace("'", "\\'") %>')"><%= catName %></button>
+            <%
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    if (rsTab != null) try { rsTab.close(); } catch (Exception e) {}
+                    if (stTab != null) try { stTab.close(); } catch (Exception e) {}
+                    if (conTab != null) try { conTab.close(); } catch (Exception e) {}
+                }
+            %>
         </div>
 
         <!-- Catalog Product Grid -->
-        <section class="products-grid" id="productGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 30px; margin-top: 40px;">
+        <section class="products-grid" id="productGrid">
             <%
                 Connection con = null;
                 PreparedStatement ps = null;

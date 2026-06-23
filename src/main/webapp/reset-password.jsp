@@ -18,6 +18,8 @@
             String email = request.getParameter("email");
             if (email == null || email.trim().isEmpty()) {
                 error = "Email address is required.";
+            } else if (!com.mycompany.mavenproject2.ValidationHelper.isValidEmail(email)) {
+                error = "Please enter a valid email address.";
             } else {
                 Connection con = null;
                 PreparedStatement checkPs = null;
@@ -241,7 +243,7 @@
                     
                     <div class="form-group">
                         <label for="email">Email Address</label>
-                        <input type="email" id="email" name="email" placeholder="name@example.com" required>
+                        <input type="email" id="email" name="email" placeholder="name@example.com" pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$" title="Please enter a valid email address." required>
                     </div>
 
                     <button type="submit" class="btn-gold" style="width: 100%; border-radius: 12px; margin-top: 15px; padding: 14px;">
@@ -378,6 +380,17 @@
                             if (!validatePassword()) {
                                 e.preventDefault();
                                 alert("Password does not meet all security requirements.");
+                            }
+                        } else if (formType && formType.value === 'requestReset') {
+                            const emailInput = document.getElementById('email');
+                            if (emailInput) {
+                                const email = emailInput.value.trim();
+                                const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+                                if (!emailRegex.test(email)) {
+                                    e.preventDefault();
+                                    alert("Please enter a valid email address.");
+                                    emailInput.focus();
+                                }
                             }
                         }
                     });

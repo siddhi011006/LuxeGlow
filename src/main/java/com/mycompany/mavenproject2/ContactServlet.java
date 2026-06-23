@@ -27,6 +27,11 @@ public class ContactServlet extends HttpServlet {
             return;
         }
 
+        if (!ValidationHelper.isValidEmail(email)) {
+            response.sendRedirect("contact.jsp?error=Please enter a valid email address.");
+            return;
+        }
+
         try {
             Connection con = DBConnection.getConnection();
             String sql = "INSERT INTO contact_messages (name, email, subject, message) VALUES (?, ?, ?, ?)";

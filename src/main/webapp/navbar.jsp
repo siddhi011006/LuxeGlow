@@ -134,67 +134,72 @@
 </div>
 <% } %>
 
-<nav style="display: flex; justify-content: space-between; align-items: center; padding: 15px 5%; background: rgba(250, 248, 245, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); position: sticky; top: 0; border-bottom: 1px solid var(--border-light); z-index: 1000; transition: var(--transition);">
-    <a href="index.jsp" class="logo" style="font-size: 1.8rem; font-weight: 700; letter-spacing: 2.5px; color: var(--burgundy); text-decoration: none;">LuxeGlow</a>
+<nav class="navbar">
+    <button class="nav-hamburger" id="navHamburger" onclick="toggleNavMenu()" aria-label="Toggle menu">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <a href="index.jsp" class="logo">LuxeGlow</a>
 
     <!-- Sitemap Navigation links -->
-    <ul style="display: flex; align-items: center; gap: 20px; list-style: none; margin: 0; padding: 0; flex-wrap: wrap;">
-        <li><a href="index.jsp" style="color: var(--text-secondary); font-weight: 600; font-size: 0.8rem; letter-spacing: 1px; text-transform: uppercase;">Home</a></li>
-        <li><a href="product.jsp" style="color: var(--text-secondary); font-weight: 600; font-size: 0.8rem; letter-spacing: 1px; text-transform: uppercase;">Shop</a></li>
-        <li><a href="new-arrivals.jsp" style="color: var(--text-secondary); font-weight: 600; font-size: 0.8rem; letter-spacing: 1px; text-transform: uppercase;">New Arrivals</a></li>
-        <li><a href="best-sellers.jsp" style="color: var(--text-secondary); font-weight: 600; font-size: 0.8rem; letter-spacing: 1px; text-transform: uppercase;">Best Sellers</a></li>
-        <li><a href="offers.jsp" style="color: var(--text-secondary); font-weight: 600; font-size: 0.8rem; letter-spacing: 1px; text-transform: uppercase;">Offers</a></li>
-        <li><a href="gift-sets.jsp" style="color: var(--text-secondary); font-weight: 600; font-size: 0.8rem; letter-spacing: 1px; text-transform: uppercase;">Gift Sets</a></li>
-        <li><a href="blog.jsp" style="color: var(--text-secondary); font-weight: 600; font-size: 0.8rem; letter-spacing: 1px; text-transform: uppercase;">Blog</a></li>
-        <li><a href="about.jsp" style="color: var(--text-secondary); font-weight: 600; font-size: 0.8rem; letter-spacing: 1px; text-transform: uppercase;">About</a></li>
-        <li><a href="contact.jsp" style="color: var(--text-secondary); font-weight: 600; font-size: 0.8rem; letter-spacing: 1px; text-transform: uppercase;">Contact</a></li>
+    <ul class="nav-links" id="navLinks">
+        <li><a href="index.jsp">Home</a></li>
+        <li><a href="product.jsp">Shop</a></li>
+        <li><a href="new-arrivals.jsp">New Arrivals</a></li>
+        <li><a href="best-sellers.jsp">Best Sellers</a></li>
+        <li><a href="offers.jsp">Offers</a></li>
+        <li><a href="gift-sets.jsp">Gift Sets</a></li>
+        <li><a href="blog.jsp">Blog</a></li>
+        <li><a href="about.jsp">About</a></li>
+        <li><a href="contact.jsp">Contact</a></li>
     </ul>
 
     <!-- Search & Utility Controls -->
-    <div style="display: flex; align-items: center; gap: 20px;">
-        
+    <div class="nav-controls-right">
         <!-- Search bar wrapper -->
-        <div class="nav-search-bar" style="position: relative; min-width: 180px; display: flex; align-items: center;">
-            <form action="product.jsp" method="get" style="display: flex; align-items: center; background: rgba(0,0,0,0.03); border: 1px solid var(--border-color); border-radius: 30px; padding: 4px 14px; width: 100%;">
-                <input type="text" name="search" placeholder="Search products..." style="border: none; background: transparent; font-size: 0.75rem; outline: none; width: 100%; color: var(--text-primary);">
-                <button type="submit" style="border: none; background: transparent; cursor: pointer; color: var(--gold); padding: 0;"><i class="fas fa-search" style="font-size: 0.85rem;"></i></button>
+        <div class="nav-search-row">
+            <form action="product.jsp" method="get" class="nav-search-form">
+                <input type="text" name="search" placeholder="Search products..." class="nav-search-input">
+                <button type="submit" class="nav-search-btn"><i class="fas fa-search"></i></button>
             </form>
         </div>
 
-        <a href="wishlist.jsp" class="cart-icon-wrapper" title="Wishlist" style="color: var(--burgundy); font-size: 1.1rem; display: inline-flex; align-items: center; position: relative;">
-            <i class="far fa-heart"></i>
-            <span class="wishlist-count" id="wishlistCount" style="background: var(--gold); color: #FFFFFF; font-size: 0.6rem; font-weight: 700; border-radius: 50%; width: 16px; height: 16px; display: <%= navWishlistCount > 0 ? "flex" : "none" %>; align-items: center; justify-content: center; position: absolute; top: -6px; right: -10px;"><%= navWishlistCount %></span>
-        </a>
+        <div class="nav-utils">
+            <a href="wishlist.jsp" class="cart-icon-wrapper" title="Wishlist" style="color: var(--burgundy); font-size: 1.1rem; display: inline-flex; align-items: center; position: relative;">
+                <i class="far fa-heart"></i>
+                <span class="wishlist-count" id="wishlistCount" style="background: var(--gold); color: #FFFFFF; font-size: 0.6rem; font-weight: 700; border-radius: 50%; width: 16px; height: 16px; display: <%= navWishlistCount > 0 ? "flex" : "none" %>; align-items: center; justify-content: center; position: absolute; top: -6px; right: -10px;"><%= navWishlistCount %></span>
+            </a>
 
-        <a href="cart.jsp" class="cart-icon-wrapper" title="Shopping Bag" style="color: var(--burgundy); font-size: 1.1rem; display: inline-flex; align-items: center; position: relative;">
-            <i class="fas fa-shopping-bag"></i>
-            <span class="cart-count" id="cartCount" style="background: var(--burgundy); color: #FFFFFF; font-size: 0.6rem; font-weight: 700; border-radius: 50%; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; position: absolute; top: -6px; right: -10px;"><%= navCartCount %></span>
-        </a>
+            <a href="cart.jsp" class="cart-icon-wrapper" title="Shopping Bag" style="color: var(--burgundy); font-size: 1.1rem; display: inline-flex; align-items: center; position: relative;">
+                <i class="fas fa-shopping-bag"></i>
+                <span class="cart-count" id="cartCount" style="background: var(--burgundy); color: #FFFFFF; font-size: 0.6rem; font-weight: 700; border-radius: 50%; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; position: absolute; top: -6px; right: -10px;"><%= navCartCount %></span>
+            </a>
 
-        <% if (navUsername == null) { %>
-            <a href="login.jsp" class="login-btn" style="display: inline-block; background: var(--burgundy); color: #FFFFFF; font-weight: 600; font-size: 0.75rem; letter-spacing: 1px; padding: 8px 20px; border-radius: 20px; text-transform: uppercase;">Login</a>
-        <% } else { %>
-            <div class="profile-menu" style="position: relative; display: inline-block;">
-                <div class="profile-circle" style="width: 32px; height: 32px; border-radius: 50%; background: var(--burgundy); color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; border: 1px solid rgba(0,0,0,0.05); cursor: pointer; transition: var(--transition);">
-                    <%= navUsername.substring(0,1).toUpperCase() %>
-                </div>
-
-                <div class="dropdown" style="position: absolute; top: 34px; right: 0; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; min-width: 200px; box-shadow: var(--shadow-lux); overflow: hidden; z-index: 100;">
-                    <div style="padding: 12px 20px; font-size: 0.75rem; color: var(--gold); border-bottom: 1px solid var(--border-light)">
-                        Hi, <%= navUsername %>
+            <% if (navUsername == null) { %>
+                <a href="login.jsp" class="login-btn">Login</a>
+            <% } else { %>
+                <div class="profile-menu" style="position: relative; display: inline-block;">
+                    <div class="profile-circle" style="width: 32px; height: 32px; border-radius: 50%; background: var(--burgundy); color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; border: 1px solid rgba(0,0,0,0.05); cursor: pointer; transition: var(--transition);">
+                        <%= navUsername.substring(0,1).toUpperCase() %>
                     </div>
-                    <% if ("ADMIN".equalsIgnoreCase(navRole)) { %>
-                        <a href="admin" style="display: block; padding: 10px 20px; color: var(--text-secondary); font-size: 0.8rem; text-decoration: none; border-bottom: 1px solid var(--border-light);"><i class="fas fa-chart-line" style="margin-right: 8px;"></i>Admin Panel</a>
-                    <% } %>
-                    <a href="profile.jsp" style="display: block; padding: 10px 20px; color: var(--text-secondary); font-size: 0.8rem; text-decoration: none;"><i class="fas fa-user" style="margin-right: 8px;"></i>My Profile</a>
-                    <a href="orders.jsp" style="display: block; padding: 10px 20px; color: var(--text-secondary); font-size: 0.8rem; text-decoration: none;"><i class="fas fa-history" style="margin-right: 8px;"></i>My Orders</a>
-                    <a href="wishlist.jsp" style="display: block; padding: 10px 20px; color: var(--text-secondary); font-size: 0.8rem; text-decoration: none;"><i class="fas fa-heart" style="margin-right: 8px;"></i>My Wishlist</a>
-                    <a href="addresses.jsp" style="display: block; padding: 10px 20px; color: var(--text-secondary); font-size: 0.8rem; text-decoration: none;"><i class="fas fa-map-marker-alt" style="margin-right: 8px;"></i>Saved Addresses</a>
-                    <div class="dropdown-divider" style="height: 1px; background: var(--border-light);"></div>
-                    <a href="logout" style="display: block; padding: 10px 20px; color: var(--text-secondary); font-size: 0.8rem; text-decoration: none;"><i class="fas fa-sign-out-alt" style="margin-right: 8px;"></i>Logout</a>
+
+                    <div class="dropdown" style="position: absolute; top: 34px; right: 0; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; min-width: 200px; box-shadow: var(--shadow-lux); overflow: hidden; z-index: 100;">
+                        <div style="padding: 12px 20px; font-size: 0.75rem; color: var(--gold); border-bottom: 1px solid var(--border-light)">
+                            Hi, <%= navUsername %>
+                        </div>
+                        <% if ("ADMIN".equalsIgnoreCase(navRole)) { %>
+                            <a href="admin" style="display: block; padding: 10px 20px; color: var(--text-secondary); font-size: 0.8rem; text-decoration: none; border-bottom: 1px solid var(--border-light);"><i class="fas fa-chart-line" style="margin-right: 8px;"></i>Admin Panel</a>
+                        <% } %>
+                        <a href="profile.jsp" style="display: block; padding: 10px 20px; color: var(--text-secondary); font-size: 0.8rem; text-decoration: none;"><i class="fas fa-user" style="margin-right: 8px;"></i>My Profile</a>
+                        <a href="orders.jsp" style="display: block; padding: 10px 20px; color: var(--text-secondary); font-size: 0.8rem; text-decoration: none;"><i class="fas fa-history" style="margin-right: 8px;"></i>My Orders</a>
+                        <a href="wishlist.jsp" style="display: block; padding: 10px 20px; color: var(--text-secondary); font-size: 0.8rem; text-decoration: none;"><i class="fas fa-heart" style="margin-right: 8px;"></i>My Wishlist</a>
+                        <a href="addresses.jsp" style="display: block; padding: 10px 20px; color: var(--text-secondary); font-size: 0.8rem; text-decoration: none;"><i class="fas fa-map-marker-alt" style="margin-right: 8px;"></i>Saved Addresses</a>
+                        <div class="dropdown-divider" style="height: 1px; background: var(--border-light);"></div>
+                        <a href="logout" style="display: block; padding: 10px 20px; color: var(--text-secondary); font-size: 0.8rem; text-decoration: none;"><i class="fas fa-sign-out-alt" style="margin-right: 8px;"></i>Logout</a>
+                    </div>
                 </div>
-            </div>
-        <% } %>
+            <% } %>
+        </div>
     </div>
 </nav>
 
@@ -358,5 +363,18 @@
             console.error(err);
             showToast('Please log in or try again.', 'warning');
         });
+    }
+
+    function toggleNavMenu() {
+        const navLinks = document.getElementById('navLinks');
+        const hamburgerIcon = document.querySelector('.nav-hamburger i');
+        if (navLinks) {
+            navLinks.classList.toggle('active');
+            if (navLinks.classList.contains('active')) {
+                if (hamburgerIcon) hamburgerIcon.className = 'fas fa-times';
+            } else {
+                if (hamburgerIcon) hamburgerIcon.className = 'fas fa-bars';
+            }
+        }
     }
 </script>

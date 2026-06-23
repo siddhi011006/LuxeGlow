@@ -67,7 +67,7 @@
 
                 <div class="form-group">
                     <label for="email">Email Address</label>
-                    <input type="email" id="email" name="email" placeholder="name@example.com" value="<%= emailVal.replace("\"", "&quot;") %>" required>
+                    <input type="email" id="email" name="email" placeholder="name@example.com" value="<%= emailVal.replace("\"", "&quot;") %>" pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$" title="Please enter a valid email address." required>
                 </div>
 
                 <div class="form-group">
@@ -263,12 +263,100 @@
 
                 passwordInput.addEventListener('input', validatePassword);
                 
+                function isValidEmail(email) {
+                    if (!email || email.trim() === '') return false;
+                    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+                    return emailRegex.test(email.trim());
+                }
+
+                function isValidPhone(countryCode, phone) {
+                    if (!phone || phone.trim() === '') return false;
+                    const cleanPhone = phone.trim();
+                    
+                    if (!/^\d+$/.test(cleanPhone)) return false;
+                    
+                    let allSame = true;
+                    for (let i = 1; i < cleanPhone.length; i++) {
+                        if (cleanPhone[i] !== cleanPhone[0]) {
+                            allSame = false;
+                            break;
+                        }
+                    }
+                    if (allSame) return false;
+                    
+                    let isAsc = true;
+                    let isDesc = true;
+                    for (let i = 1; i < cleanPhone.length; i++) {
+                        let prev = parseInt(cleanPhone[i - 1]);
+                        let curr = parseInt(cleanPhone[i]);
+                        if (curr !== (prev + 1) % 10) {
+                            isAsc = false;
+                        }
+                        if (curr !== (prev - 1 + 10) % 10) {
+                            isDesc = false;
+                        }
+                    }
+                    if (isAsc || isDesc) return false;
+                    
+                    const cc = (countryCode || '').trim();
+                    const len = cleanPhone.length;
+                    
+                    if (cc === '+91') {
+                        if (len !== 10) return false;
+                        const start = cleanPhone[0];
+                        if (start !== '6' && start !== '7' && start !== '8' && start !== '9') return false;
+                    } else if (cc === '+1') {
+                        if (len !== 10) return false;
+                        const start = cleanPhone[0];
+                        if (start === '0' || start === '1') return false;
+                    } else if (cc === '+44') {
+                        if (len < 9 || len > 11) return false;
+                    } else if (cc === '+61') {
+                        if (len < 9 || len > 10) return false;
+                    } else if (cc === '+971') {
+                        if (len !== 9) return false;
+                    } else if (cc === '+81') {
+                        if (len < 10 || len > 11) return false;
+                    } else if (cc === '+86') {
+                        if (len !== 11) return false;
+                    } else if (cc === '+49') {
+                        if (len < 10 || len > 11) return false;
+                    } else if (cc === '+33') {
+                        if (len !== 9) return false;
+                    } else if (cc === '+65') {
+                        if (len !== 8) return false;
+                    } else {
+                        if (len < 8 || len > 15) return false;
+                    }
+                    
+                    return true;
+                }
+
                 const form = document.querySelector('form');
                 if (form) {
                     form.addEventListener('submit', (e) => {
                         if (!validatePassword()) {
                             e.preventDefault();
                             alert("Password does not meet all security requirements.");
+                            return;
+                        }
+                        
+                        const emailInput = document.getElementById('email');
+                        const phoneInput = document.getElementById('phone');
+                        const countryCodeInput = document.getElementById('countryCode');
+                        
+                        if (emailInput && !isValidEmail(emailInput.value)) {
+                            e.preventDefault();
+                            alert("Please enter a valid email address.");
+                            emailInput.focus();
+                            return;
+                        }
+                        
+                        if (phoneInput && countryCodeInput && !isValidPhone(countryCodeInput.value, phoneInput.value)) {
+                            e.preventDefault();
+                            alert("Please enter a valid mobile number matching your country format. No letters, special characters, repeating, or sequential digits are allowed.");
+                            phoneInput.focus();
+                            return;
                         }
                     });
                 }

@@ -54,7 +54,26 @@
     %>
 
     <!-- Hero Banner -->
-    <section class="hero">
+    <%
+        String customHeroImage = "image/bc2.jpg"; // Default fallback
+        try {
+            String configPath = application.getRealPath("/WEB-INF/hero_config.txt");
+            if (configPath != null) {
+                java.io.File cf = new java.io.File(configPath);
+                if (cf.exists()) {
+                    try (java.io.BufferedReader br = new java.io.BufferedReader(new java.io.FileReader(cf))) {
+                        String line = br.readLine();
+                        if (line != null && !line.trim().isEmpty()) {
+                            customHeroImage = line.trim();
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    %>
+    <section class="hero" style="background: linear-gradient(rgba(250, 248, 245, 0.82), rgba(250, 248, 245, 0.88)), url('<%= customHeroImage %>') no-repeat center center/cover;">
         <div class="hero-content">
             <h1>Glow Like Never Before</h1>
             <p>Indulge in our dermatologist-tested, cruelty-free cosmetic formulations designed to make you feel radiant, confident, and beautiful every single day.</p>
@@ -99,30 +118,38 @@
     <section class="categories-section">
         <h2>Shop By Category</h2>
         <div class="category-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 20px; margin-top: 30px;">
-            <div class="category-card" onclick="location.href='product.jsp?category=Skincare'">
-                <i class="fas fa-spa" style="display:block; font-size:1.5rem; margin-bottom:10px; color:var(--gold);"></i>
-                Skincare
+            <%
+                Connection conCat = null;
+                Statement stCat = null;
+                ResultSet rsCat = null;
+                try {
+                    conCat = DBConnection.getConnection();
+                    stCat = conCat.createStatement();
+                    rsCat = stCat.executeQuery("SELECT name FROM categories ORDER BY name ASC");
+                    while (rsCat.next()) {
+                        String catName = rsCat.getString("name");
+                        String iconClass = "fa-gem"; // default
+                        if ("Skincare".equalsIgnoreCase(catName)) iconClass = "fa-spa";
+                        else if ("Makeup".equalsIgnoreCase(catName)) iconClass = "fa-wand-magic-sparkles";
+                        else if ("Haircare".equalsIgnoreCase(catName)) iconClass = "fa-wind";
+                        else if ("Bodycare".equalsIgnoreCase(catName)) iconClass = "fa-soap";
+                        else if ("Fragrances".equalsIgnoreCase(catName)) iconClass = "fa-spray-can";
+                        else if ("Accessories".equalsIgnoreCase(catName)) iconClass = "fa-paint-brush";
+            %>
+            <div class="category-card" onclick="location.href='product.jsp?category=<%= java.net.URLEncoder.encode(catName, "UTF-8") %>'">
+                <i class="fas <%= iconClass %>" style="display:block; font-size:1.5rem; margin-bottom:10px; color:var(--gold);"></i>
+                <%= catName %>
             </div>
-            <div class="category-card" onclick="location.href='product.jsp?category=Makeup'">
-                <i class="fas fa-wand-magic-sparkles" style="display:block; font-size:1.5rem; margin-bottom:10px; color:var(--gold);"></i>
-                Makeup
-            </div>
-            <div class="category-card" onclick="location.href='product.jsp?category=Haircare'">
-                <i class="fas fa-wind" style="display:block; font-size:1.5rem; margin-bottom:10px; color:var(--gold);"></i>
-                Haircare
-            </div>
-            <div class="category-card" onclick="location.href='product.jsp?category=Bodycare'">
-                <i class="fas fa-soap" style="display:block; font-size:1.5rem; margin-bottom:10px; color:var(--gold);"></i>
-                Bodycare
-            </div>
-            <div class="category-card" onclick="location.href='product.jsp?category=Fragrances'">
-                <i class="fas fa-spray-can" style="display:block; font-size:1.5rem; margin-bottom:10px; color:var(--gold);"></i>
-                Fragrances
-            </div>
-            <div class="category-card" onclick="location.href='product.jsp?category=Accessories'">
-                <i class="fas fa-paint-brush" style="display:block; font-size:1.5rem; margin-bottom:10px; color:var(--gold);"></i>
-                Accessories
-            </div>
+            <%
+                    }
+                } catch (Exception e) {
+                    out.println("<p style='color:var(--danger);'>Failed to load categories: " + e.getMessage() + "</p>");
+                } finally {
+                    if (rsCat != null) try { rsCat.close(); } catch (Exception e) {}
+                    if (stCat != null) try { stCat.close(); } catch (Exception e) {}
+                    if (conCat != null) try { conCat.close(); } catch (Exception e) {}
+                }
+            %>
         </div>
     </section>
 

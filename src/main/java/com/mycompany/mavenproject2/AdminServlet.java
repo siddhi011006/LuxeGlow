@@ -973,6 +973,63 @@ public class AdminServlet extends HttpServlet {
                     response.sendRedirect("admin?tab=reviews&success=Review visibility toggled.");
                 }
 
+            } else if ("updateHeroBanner".equalsIgnoreCase(action)) {
+                Part filePart = request.getPart("heroImageFile");
+                String redirectDest = "admin?tab=hero";
+                if (filePart != null && filePart.getSize() > 0) {
+                    String fileName = java.nio.file.Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
+                    String nameWithoutExt = fileName;
+                    String ext = "";
+                    int dotIndex = fileName.lastIndexOf('.');
+                    if (dotIndex > 0) {
+                        nameWithoutExt = fileName.substring(0, dotIndex);
+                        ext = fileName.substring(dotIndex);
+                    }
+                    String newFileName = nameWithoutExt + "_" + System.currentTimeMillis() + ext;
+                    String uploadPath = request.getServletContext().getRealPath("") + File.separator + "image";
+                    File uploadDir = new File(uploadPath);
+                    if (!uploadDir.exists()) {
+                        uploadDir.mkdirs();
+                    }
+                    String filePath = uploadPath + File.separator + newFileName;
+                    filePart.write(filePath);
+                    String customHeroImage = "image/" + newFileName;
+
+                    // Save to config file
+                    String configPath = request.getServletContext().getRealPath("/WEB-INF/hero_config.txt");
+                    File configFile = new File(configPath);
+                    try (java.io.FileWriter fw = new java.io.FileWriter(configFile)) {
+                        fw.write(customHeroImage);
+                    }
+                    response.sendRedirect(redirectDest + "&success=Hero image updated successfully.");
+                } else {
+                    response.sendRedirect(redirectDest + "&error=Please select a valid image file to upload.");
+                }
+
+            } else if ("deleteHeroBanner".equalsIgnoreCase(action)) {
+                String redirectDest = "admin?tab=hero";
+                String configPath = request.getServletContext().getRealPath("/WEB-INF/hero_config.txt");
+                File configFile = new File(configPath);
+                if (configFile.exists()) {
+                    try {
+                        String currentImage = "";
+                        try (java.io.BufferedReader br = new java.io.BufferedReader(new java.io.FileReader(configFile))) {
+                            currentImage = br.readLine();
+                        }
+                        if (currentImage != null && !currentImage.trim().isEmpty()) {
+                            String physicalPath = request.getServletContext().getRealPath("") + File.separator + currentImage.replace('/', File.separatorChar);
+                            File imgFile = new File(physicalPath);
+                            if (imgFile.exists()) {
+                                imgFile.delete();
+                            }
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    configFile.delete();
+                }
+                response.sendRedirect(redirectDest + "&success=Hero image deleted. Reverted to default banner.");
+
             } else if ("deleteReviewAdmin".equalsIgnoreCase(action)) {
                 int reviewId = Integer.parseInt(request.getParameter("reviewId"));
                 String sql = "DELETE FROM reviews WHERE id=?";

@@ -104,7 +104,7 @@
     <!-- Include Glassmorphic Header -->
     <%@ include file="../navbar.jsp" %>
 
-    <div class="page-container" style="max-width:1350px;">
+    <div class="page-container" style="max-width:100%; padding: 0 40px;">
         
         <!-- Alerts for Operation Messages -->
         <%
@@ -183,6 +183,11 @@
                             <i class="fas fa-cogs"></i> System Settings
                         </button>
                     </li>
+                    <li>
+                        <button class="<%= "hero".equals(activeTab) ? "active" : "" %>" onclick="location.href='admin?tab=hero'">
+                            <i class="fas fa-image"></i> Hero Banner
+                        </button>
+                    </li>
                     <li style="margin-top:20px; border-top:1px solid var(--border-light); padding-top:15px;">
                         <button style="color:var(--danger);" onclick="if(confirm('Sign out of Admin Session?')) location.href='admin-logout';">
                             <i class="fas fa-sign-out-alt" style="color:var(--danger);"></i> Log Out
@@ -222,7 +227,7 @@
                         </div>
                     </section>
 
-                    <div style="display:grid; grid-template-columns:1.5fr 1fr; gap:30px; margin-top:20px; text-align:left;">
+                    <div class="admin-two-col-grid">
                         <!-- Recent Orders Column -->
                         <div>
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -230,7 +235,8 @@
                                 <a href="admin?tab=orders" style="font-size:0.8rem; font-weight:600; text-transform:uppercase; color:var(--gold);">View All Orders</a>
                             </div>
 
-                            <table class="admin-table" style="margin-top:0;">
+                            <div class="admin-table-wrapper">
+                            <table class="admin-table" style="width:100%; margin-top:0; border-collapse:collapse;">
                                 <thead>
                                     <tr>
                                         <th>Ref</th>
@@ -333,6 +339,7 @@
                                     %>
                                 </tbody>
                             </table>
+                            </div>
                         </div>
 
                         <!-- Mini Charts Widget Column -->
@@ -352,7 +359,7 @@
                     <!-- ==========================================
                          CATALOG MANAGER TAB (REDESIGNED)
                          ========================================== -->
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px; text-align:left;">
+                    <div class="admin-tab-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px; text-align:left;">
                         <div>
                             <h2 style="font-size:1.6rem; border-bottom:none; margin:0; padding-bottom:0; font-family:'Playfair Display', serif; color:var(--burgundy);">Beauty Inventory</h2>
                             <p style="color:var(--text-muted); font-size:0.85rem; margin-top:5px;">Configure catalog entries, stocks, variants, and cosmetic imaging.</p>
@@ -363,7 +370,7 @@
                     </div>
 
                     <!-- Advanced Filters & Sorting Bar -->
-                    <div style="display:grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr; gap:12px; margin-bottom:20px; align-items:center;">
+                    <div class="catalog-filter-bar">
                         <div class="search-input-wrapper" style="margin-bottom:0; text-align:left; width:100%;">
                             <i class="fas fa-search"></i>
                             <input type="text" id="catalogSearch" onkeyup="filterCatalog()" placeholder="Search by name, SKU, brand...">
@@ -412,7 +419,7 @@
                     </div>
 
                     <!-- Bulk Actions Toolbar -->
-                    <div id="bulkActionsToolbar" style="display:none; background:var(--bg-surface); border:1px solid var(--gold); padding:12px 20px; border-radius:12px; margin-bottom:20px; text-align:left; align-items:center; justify-content:space-between; gap:15px; box-shadow:var(--shadow-lux);">
+                    <div id="bulkActionsToolbar" class="admin-bulk-toolbar" style="display:none; background:var(--bg-surface); border:1px solid var(--gold); padding:12px 20px; border-radius:12px; margin-bottom:20px; text-align:left; align-items:center; justify-content:space-between; gap:15px; box-shadow:var(--shadow-lux);">
                         <div style="display:flex; align-items:center; gap:10px;">
                             <span id="selectedCountLabel" style="font-weight:600; color:var(--gold); font-size:0.9rem;">0 items selected</span>
                         </div>
@@ -430,7 +437,7 @@
                     </div>
 
                     <!-- Catalogue Table Layout -->
-                    <div style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:18px; padding:15px; box-shadow:var(--shadow-lux); overflow-x:auto;">
+                    <div class="admin-table-wrapper">
                         <table class="admin-table" style="width:100%; margin-top:0; border-collapse:collapse;" id="catalogTable">
                             <thead>
                                 <tr>
@@ -562,7 +569,7 @@
 
                     <!-- Categories Section inside Products tab -->
                     <div style="margin-top:50px; background:var(--bg-card); border:1px solid var(--border-color); border-radius:24px; padding:35px; box-shadow:var(--shadow-lux); text-align:left;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:15px;">
+                        <div class="admin-tab-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:15px;">
                             <div>
                                 <h3 style="font-size:1.3rem; margin:0; border:none;">Cosmetic Categories</h3>
                                 <p style="color:var(--text-muted); font-size:0.8rem; margin-top:5px;">Add or delete catalog category divisions.</p>
@@ -634,7 +641,8 @@
                         </div>
                     </div>
 
-                    <table class="admin-table" id="ordersTable">
+                    <div class="admin-table-wrapper">
+                    <table class="admin-table" style="width:100%; margin-top:0; border-collapse:collapse;" id="ordersTable">
                         <thead>
                             <tr>
                                 <th>Order Ref</th>
@@ -788,6 +796,7 @@
                             %>
                         </tbody>
                     </table>
+                    </div>
 
                 <% } else if ("users".equalsIgnoreCase(activeTab)) { %>
                     <!-- ==========================================
@@ -804,7 +813,8 @@
                         <input type="text" id="userSearch" onkeyup="searchUsersList()" placeholder="Search users by name, username, email, or country...">
                     </div>
 
-                    <table class="admin-table" id="usersTable">
+                    <div class="admin-table-wrapper">
+                    <table class="admin-table" style="width:100%; margin-top:0; border-collapse:collapse;" id="usersTable">
                         <thead>
                             <tr>
                                 <th>ID</th>
@@ -884,6 +894,7 @@
                             %>
                         </tbody>
                     </table>
+                    </div>
 
                 <% } else if ("reports".equalsIgnoreCase(activeTab)) { %>
                     <!-- ==========================================
@@ -894,7 +905,7 @@
                         <p style="color:var(--text-muted); font-size:0.85rem; margin-top:5px;">Detailed metrics on revenue channels and sales performance.</p>
                     </div>
 
-                    <div style="display:grid; grid-template-columns:1.5fr 1fr; gap:30px; margin-top:20px; text-align:left;">
+                    <div class="admin-two-col-grid">
                         
                         <!-- Monthly trends charts -->
                         <div style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:24px; padding:30px; box-shadow:var(--shadow-lux);">
@@ -917,7 +928,8 @@
                     <!-- Detailed monthly sales table breakdown -->
                     <div style="margin-top:40px; text-align:left;">
                         <h3 style="font-size:1.3rem; margin-bottom:15px; border:none;">Historical Revenue Matrix</h3>
-                        <table class="admin-table" style="margin-top:0;">
+                        <div class="admin-table-wrapper">
+                        <table class="admin-table" style="width:100%; margin-top:0; border-collapse:collapse;">
                             <thead>
                                 <tr>
                                     <th>Reporting Month</th>
@@ -953,6 +965,7 @@
                                 %>
                             </tbody>
                         </table>
+                        </div>
                     </div>
 
                 <% } else if ("settings".equalsIgnoreCase(activeTab)) { %>
@@ -964,12 +977,13 @@
                         <p style="color:var(--text-muted); font-size:0.85rem; margin-top:5px;">Configure variables, database credentials, and review user inquiries.</p>
                     </div>
 
-                    <div style="display:grid; grid-template-columns:1.5fr 1fr; gap:30px; text-align:left;">
+                    <div class="admin-two-col-grid">
                         
                         <!-- Client Communications Log -->
                         <div>
                             <h3 style="font-size:1.3rem; margin-bottom:15px; border:none;">Client Communications Log</h3>
-                            <table class="admin-table" style="margin-top:0;">
+                            <div class="admin-table-wrapper">
+                            <table class="admin-table" style="width:100%; margin-top:0; border-collapse:collapse;">
                                 <thead>
                                     <tr>
                                         <th>Sender</th>
@@ -1014,6 +1028,7 @@
                                     %>
                                 </tbody>
                             </table>
+                            </div>
                         </div>
 
                         <!-- System Parameters -->
@@ -1428,7 +1443,8 @@
                         </button>
                     </div>
 
-                    <table class="admin-table">
+                    <div class="admin-table-wrapper">
+                    <table class="admin-table" style="width:100%; margin-top:0; border-collapse:collapse;">
                         <thead>
                             <tr>
                                 <th>ID</th>
@@ -1506,6 +1522,7 @@
                             %>
                         </tbody>
                     </table>
+                    </div>
 
                  <% } else if ("coupons".equalsIgnoreCase(activeTab)) { %>
                     <!-- ==========================================
@@ -1521,7 +1538,8 @@
                         </button>
                     </div>
 
-                    <table class="admin-table">
+                    <div class="admin-table-wrapper">
+                    <table class="admin-table" style="width:100%; margin-top:0; border-collapse:collapse;">
                         <thead>
                             <tr>
                                 <th>ID</th>
@@ -1602,6 +1620,7 @@
                             %>
                         </tbody>
                     </table>
+                    </div>
 
                  <% } else if ("reviews".equalsIgnoreCase(activeTab)) { %>
                     <!-- ==========================================
@@ -1627,7 +1646,8 @@
                         </div>
                     </div>
 
-                    <table class="admin-table" id="reviewsTable">
+                    <div class="admin-table-wrapper">
+                    <table class="admin-table" style="width:100%; margin-top:0; border-collapse:collapse;" id="reviewsTable">
                         <thead>
                             <tr>
                                 <th>ID</th>
@@ -1712,6 +1732,105 @@
                             %>
                         </tbody>
                     </table>
+                    </div>
+
+                 <% } else if ("hero".equalsIgnoreCase(activeTab)) { %>
+                    <!-- ==========================================
+                         HERO SECTION MANAGEMENT
+                         ========================================== -->
+                    <div style="text-align:left; margin-bottom:25px;">
+                        <h2 style="font-size:1.6rem; border-bottom:none; margin:0; padding-bottom:0; font-family:'Playfair Display', serif; color:var(--burgundy);">Hero Banner Management</h2>
+                        <p style="color:var(--text-muted); font-size:0.85rem; margin-top:5px;">Upload, replace, delete, and manage the website's homepage hero banner image.</p>
+                    </div>
+
+                    <div class="admin-two-col-grid" style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 30px; margin-top: 20px;">
+                        <!-- Left Column: Preview & Upload Controls -->
+                        <div style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:24px; padding:30px; box-shadow:var(--shadow-lux); text-align:left;">
+                            <h3 style="font-size:1.3rem; margin-bottom:20px; border:none; color:var(--burgundy); font-family:'Playfair Display', serif;">Upload & Replace Banner</h3>
+                            
+                            <form action="AdminServlet" method="POST" enctype="multipart/form-data">
+                                <input type="hidden" name="action" value="updateHeroBanner">
+                                
+                                <div style="margin-bottom: 25px;">
+                                    <label style="display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">Select Hero Image File</label>
+                                    <input type="file" id="heroImageFile" name="heroImageFile" accept="image/*" onchange="previewHeroImage(event)" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: var(--text-primary); cursor: pointer;">
+                                    <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 5px;">Recommended resolution: 1920x800. Formats: JPG, PNG, WEBP.</p>
+                                </div>
+                                
+                                <div style="display: flex; gap: 12px; margin-top: 20px;">
+                                    <button type="submit" class="btn-gold" style="border-radius:12px; padding:10px 24px; flex-grow: 1;">
+                                        <i class="fas fa-save" style="margin-right: 8px;"></i> Save Banner
+                                    </button>
+                                    
+                                    <%
+                                        String tempHero = "image/bc2.jpg";
+                                        boolean hasCustomHero = false;
+                                        try {
+                                            String configPath = application.getRealPath("/WEB-INF/hero_config.txt");
+                                            if (configPath != null) {
+                                                java.io.File cf = new java.io.File(configPath);
+                                                if (cf.exists()) {
+                                                    try (java.io.BufferedReader br = new java.io.BufferedReader(new java.io.FileReader(cf))) {
+                                                        String line = br.readLine();
+                                                        if (line != null && !line.trim().isEmpty()) {
+                                                            tempHero = line.trim();
+                                                            hasCustomHero = true;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        } catch (Exception e) {}
+                                        if (hasCustomHero) {
+                                    %>
+                                        <button type="button" class="btn-outline" style="border-radius:12px; padding:10px 24px; color: var(--danger); border-color: var(--danger); background: transparent;" onclick="if(confirm('Delete custom hero banner and revert to default?')) document.getElementById('deleteHeroForm').submit();">
+                                            <i class="fas fa-trash-alt" style="margin-right: 8px;"></i> Revert to Default
+                                        </button>
+                                    <% } %>
+                                </div>
+                            </form>
+                            
+                            <form id="deleteHeroForm" action="AdminServlet" method="POST" style="display:none;">
+                                <input type="hidden" name="action" value="deleteHeroBanner">
+                            </form>
+                        </div>
+                        
+                        <!-- Right Column: Interactive Banner Preview -->
+                        <div style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:24px; padding:30px; box-shadow:var(--shadow-lux); display: flex; flex-direction: column; justify-content: space-between;">
+                            <div>
+                                <h3 style="font-size:1.3rem; margin-bottom:10px; border:none; color:var(--burgundy); font-family:'Playfair Display', serif;">Live Preview</h3>
+                                <p style="color:var(--text-muted); font-size:0.8rem; margin-bottom: 20px;">Review your selection below before applying changes to the site.</p>
+                            </div>
+                            
+                            <div style="position: relative; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); width: 100%; padding-top: 50%; background: #FAF8F5;">
+                                <img id="heroPreviewDisplay" src="<%= tempHero %>?t=<%= System.currentTimeMillis() %>" style="position: absolute; top:0; left:0; width:100%; height:100%; object-fit:cover;">
+                                <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(rgba(250, 248, 245, 0.82), rgba(250, 248, 245, 0.88)); display: flex; align-items: center; justify-content: center; text-align: center; padding: 10px;">
+                                    <div style="transform: scale(0.6);">
+                                        <h1 style="font-size: 2.2rem; line-height: 1.2; margin-bottom: 8px; color: var(--burgundy); font-family:'Playfair Display', serif; font-weight:700;">Glow Like Never Before</h1>
+                                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 12px;">Dermatologist-tested luxury formulations.</p>
+                                        <span class="btn-gold" style="padding: 6px 12px; font-size: 0.6rem; pointer-events: none;">Explore Collection</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div style="font-size:0.75rem; color:var(--text-muted); margin-top: 15px; text-align: center;">
+                                <i class="fas fa-info-circle" style="color:var(--gold); margin-right:5px;"></i> Preview displays a miniature mock of the home banner overlay.
+                            </div>
+                        </div>
+                    </div>
+
+                    <script>
+                        function previewHeroImage(event) {
+                            const input = event.target;
+                            if (input.files && input.files[0]) {
+                                const reader = new FileReader();
+                                reader.onload = function(e) {
+                                    const preview = document.getElementById('heroPreviewDisplay');
+                                    preview.src = e.target.result;
+                                }
+                                reader.readAsDataURL(input.files[0]);
+                            }
+                        }
+                    </script>
 
                  <% } %>
 

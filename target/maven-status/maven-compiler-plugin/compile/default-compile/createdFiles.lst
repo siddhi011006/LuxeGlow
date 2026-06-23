@@ -12,6 +12,7 @@ com\mycompany\mavenproject2\CouponHelper$CouponResult.class
 com\mycompany\mavenproject2\AdminServlet.class
 com\mycompany\mavenproject2\EmailUtility$1.class
 com\mycompany\mavenproject2\resources\JakartaEE10Resource.class
+com\mycompany\mavenproject2\ValidationHelper.class
 com\mycompany\mavenproject2\DBConnection.class
 com\mycompany\mavenproject2\logout.class
 com\mycompany\mavenproject2\WishlistServlet.class

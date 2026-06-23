@@ -31,8 +31,10 @@
             if (fullname == null || username == null || email == null ||
                 fullname.trim().isEmpty() || username.trim().isEmpty() || email.trim().isEmpty()) {
                 error = "All fields are required.";
-            } else if (phoneParam != null && !phoneParam.trim().isEmpty() && !phoneParam.trim().matches("\\d{10,15}")) {
-                error = "Please enter a valid mobile number (10 to 15 digits).";
+            } else if (!com.mycompany.mavenproject2.ValidationHelper.isValidEmail(email)) {
+                error = "Please enter a valid email address.";
+            } else if (phoneParam == null || phoneParam.trim().isEmpty() || !com.mycompany.mavenproject2.ValidationHelper.isValidPhone(countryCode, phoneParam)) {
+                error = "Please enter a valid mobile number matching your country format. No letters, special characters, repeating, or sequential digits are allowed.";
             } else {
                 Connection con = null;
                 PreparedStatement ps = null;
@@ -214,7 +216,7 @@
         <h1 style="font-family:'Playfair Display', serif; font-size: 2.2rem; color: var(--burgundy); margin-bottom: 30px;">My Account Dashboard</h1>
 
         <!-- Account Layout -->
-        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 40px; align-items: start;">
+        <div class="profile-layout-grid">
             
             <!-- Left Sidebar Card -->
             <div style="background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border-light); padding: 30px; box-shadow: var(--shadow-lux); text-align: center;">
@@ -256,14 +258,14 @@
                             <input type="text" name="fullname" value="<%= fullname %>" required style="width: 100%; border-radius: 30px; padding: 12px 18px; border: 1px solid var(--border-color); outline:none;">
                         </div>
 
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                        <div class="form-two-col-grid">
                             <div class="form-group">
                                 <label style="font-weight:600; font-size:0.85rem; display:block; margin-bottom:6px;">Username</label>
                                 <input type="text" name="username" value="<%= username %>" required style="width: 100%; border-radius: 30px; padding: 12px 18px; border: 1px solid var(--border-color); outline:none;">
                             </div>
                             <div class="form-group">
                                 <label style="font-weight:600; font-size:0.85rem; display:block; margin-bottom:6px;">Email Address</label>
-                                <input type="email" name="email" value="<%= email %>" required style="width: 100%; border-radius: 30px; padding: 12px 18px; border: 1px solid var(--border-color); outline:none;">
+                                <input type="email" name="email" value="<%= email %>" pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$" title="Please enter a valid email address." required style="width: 100%; border-radius: 30px; padding: 12px 18px; border: 1px solid var(--border-color); outline:none;">
                             </div>
                         </div>
 
@@ -359,7 +361,7 @@
                             </div>
                         </div>
 
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                        <div class="form-two-col-grid">
                             <div class="form-group">
                                 <label style="font-weight:600; font-size:0.85rem; display:block; margin-bottom:6px;">New Password</label>
                                 <div class="password-wrapper">
@@ -475,6 +477,75 @@
 
                 newPasswordInput.addEventListener('input', validatePassword);
                 
+                function isValidEmail(email) {
+                    if (!email || email.trim() === '') return false;
+                    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+                    return emailRegex.test(email.trim());
+                }
+
+                function isValidPhone(countryCode, phone) {
+                    if (!phone || phone.trim() === '') return false;
+                    const cleanPhone = phone.trim();
+                    
+                    if (!/^\d+$/.test(cleanPhone)) return false;
+                    
+                    let allSame = true;
+                    for (let i = 1; i < cleanPhone.length; i++) {
+                        if (cleanPhone[i] !== cleanPhone[0]) {
+                            allSame = false;
+                            break;
+                        }
+                    }
+                    if (allSame) return false;
+                    
+                    let isAsc = true;
+                    let isDesc = true;
+                    for (let i = 1; i < cleanPhone.length; i++) {
+                        let prev = parseInt(cleanPhone[i - 1]);
+                        let curr = parseInt(cleanPhone[i]);
+                        if (curr !== (prev + 1) % 10) {
+                            isAsc = false;
+                        }
+                        if (curr !== (prev - 1 + 10) % 10) {
+                            isDesc = false;
+                        }
+                    }
+                    if (isAsc || isDesc) return false;
+                    
+                    const cc = (countryCode || '').trim();
+                    const len = cleanPhone.length;
+                    
+                    if (cc === '+91') {
+                        if (len !== 10) return false;
+                        const start = cleanPhone[0];
+                        if (start !== '6' && start !== '7' && start !== '8' && start !== '9') return false;
+                    } else if (cc === '+1') {
+                        if (len !== 10) return false;
+                        const start = cleanPhone[0];
+                        if (start === '0' || start === '1') return false;
+                    } else if (cc === '+44') {
+                        if (len < 9 || len > 11) return false;
+                    } else if (cc === '+61') {
+                        if (len < 9 || len > 10) return false;
+                    } else if (cc === '+971') {
+                        if (len !== 9) return false;
+                    } else if (cc === '+81') {
+                        if (len < 10 || len > 11) return false;
+                    } else if (cc === '+86') {
+                        if (len !== 11) return false;
+                    } else if (cc === '+49') {
+                        if (len < 10 || len > 11) return false;
+                    } else if (cc === '+33') {
+                        if (len !== 9) return false;
+                    } else if (cc === '+65') {
+                        if (len !== 8) return false;
+                    } else {
+                        if (len < 8 || len > 15) return false;
+                    }
+                    
+                    return true;
+                }
+
                 const forms = document.querySelectorAll('form');
                 forms.forEach(f => {
                     const actionInput = f.querySelector('input[name="action"]');
@@ -483,6 +554,26 @@
                             if (!validatePassword()) {
                                 e.preventDefault();
                                 alert("New password does not meet all security requirements.");
+                            }
+                        });
+                    } else if (actionInput && actionInput.value === 'updateProfile') {
+                        f.addEventListener('submit', (e) => {
+                            const emailInput = f.querySelector('input[name="email"]');
+                            const phoneInput = f.querySelector('input[name="phone"]');
+                            const countryCodeInput = f.querySelector('input[name="countryCode"]');
+                            
+                            if (emailInput && !isValidEmail(emailInput.value)) {
+                                e.preventDefault();
+                                alert("Please enter a valid email address.");
+                                emailInput.focus();
+                                return;
+                            }
+                            
+                            if (phoneInput && countryCodeInput && !isValidPhone(countryCodeInput.value, phoneInput.value)) {
+                                e.preventDefault();
+                                alert("Please enter a valid mobile number matching your country format. No letters, special characters, repeating, or sequential digits are allowed.");
+                                phoneInput.focus();
+                                return;
                             }
                         });
                     }

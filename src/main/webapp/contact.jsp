@@ -92,7 +92,7 @@
 
                     <div class="form-group">
                         <label for="email">Email Address</label>
-                        <input type="email" id="email" name="email" placeholder="name@example.com" required>
+                        <input type="email" id="email" name="email" placeholder="name@example.com" pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$" title="Please enter a valid email address." required>
                     </div>
 
                     <div class="form-group">
@@ -120,6 +120,25 @@
 
     <!-- Footer -->
     <%@ include file="footer.jsp" %>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.querySelector('form');
+            if (form) {
+                form.addEventListener('submit', (e) => {
+                    const emailInput = document.getElementById('email');
+                    if (emailInput) {
+                        const email = emailInput.value.trim();
+                        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+                        if (!emailRegex.test(email)) {
+                            e.preventDefault();
+                            alert("Please enter a valid email address.");
+                            emailInput.focus();
+                        }
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>
 

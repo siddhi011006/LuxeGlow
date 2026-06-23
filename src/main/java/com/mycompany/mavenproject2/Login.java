@@ -43,8 +43,19 @@ public class Login extends HttpServlet {
             return;
         }
 
-        if (!phone.trim().matches("\\d{10,15}")) {
-            request.setAttribute("error", "Please enter a valid mobile number (10 to 15 digits).");
+        if (!ValidationHelper.isValidEmail(email)) {
+            request.setAttribute("error", "Please enter a valid email address.");
+            request.setAttribute("fullname", fullname);
+            request.setAttribute("email", email);
+            request.setAttribute("phone", phone);
+            request.setAttribute("countryCode", countryCode);
+            request.setAttribute("country", country);
+            request.getRequestDispatcher("register.jsp").forward(request, response);
+            return;
+        }
+
+        if (!ValidationHelper.isValidPhone(countryCode, phone)) {
+            request.setAttribute("error", "Please enter a valid mobile number matching your country format. No letters, special characters, all repeating, or sequential digits are allowed.");
             request.setAttribute("fullname", fullname);
             request.setAttribute("email", email);
             request.setAttribute("phone", phone);
